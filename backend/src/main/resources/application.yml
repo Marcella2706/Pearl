@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres
+    username: postgres.mhnvdcdhkptfrluixocs
+    password: pearl2706
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database: postgresql
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: marcellapearl0627@gmail.com
+    password: ${APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 2706
+
+jwt:
+  secret: 2c4d7f8910a6bcde1234567890abcdef12345678
+  expiration: 604800
+
