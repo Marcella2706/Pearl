@@ -57,7 +57,7 @@ export const WellnessFeatures = () => {
             from monitoring to expert guidance and community support.
           </p>
         </div>
-
+        
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => {
             const Icon = feature.icon;

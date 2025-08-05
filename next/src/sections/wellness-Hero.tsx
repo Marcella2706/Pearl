@@ -7,7 +7,7 @@ export const WellnessHero = () => {
     <section className="relative min-h-screen bg-gradient-hero overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img
-          src={"/assets/hero-background.png"}
+          src={"/assets/hero.png"}
           className="w-full h-full object-cover opacity-30"
         />
         <div className="absolute inset-0 bg-gradient-hero/80" />
