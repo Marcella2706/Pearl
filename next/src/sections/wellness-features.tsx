@@ -1,6 +1,6 @@
 import { Activity, Calendar, MessageCircle, TrendingUp, Clock, Star } from "lucide-react";
 import { GlassCard } from "../components/ui/Glass-Card";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 export const WellnessFeatures = () => {
   const features = [

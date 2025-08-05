@@ -54,7 +54,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen relative">
-      <BackgroundEffects />
+      {/* <BackgroundEffects /> */}
 
       <div className="flex min-h-screen">
         {/* Sidebar */}

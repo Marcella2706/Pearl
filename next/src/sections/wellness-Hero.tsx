@@ -1,6 +1,6 @@
 import { GlassCard } from "@/components/ui/Glass-Card";
 import { Heart, Shield, Users } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 
 export const WellnessHero = () => {
   return (
@@ -8,7 +8,6 @@ export const WellnessHero = () => {
       <div className="absolute inset-0 z-0">
         <img
           src={"/assets/hero.png"}
-          className="w-full h-full object-cover opacity-30"
         />
         <div className="absolute inset-0 bg-gradient-hero/80" />
       </div>
