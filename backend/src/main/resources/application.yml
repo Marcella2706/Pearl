@@ -1,8 +1,11 @@
 spring:
+  config:
+    import: optional:dotenv:.env
+
   datasource:
-    url: jdbc:postgresql://aws-0-ap-south-1.pooler.supabase.com:5432/postgres
-    username: postgres.mhnvdcdhkptfrluixocs
-    password: pearl2706
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
   jpa:
     hibernate:
@@ -20,8 +23,8 @@ spring:
 
   mail:
     host: smtp.gmail.com
-    port: 587
-    username: marcellapearl0627@gmail.com
+    port: ${SMTP_PORT}
+    username: ${SMTP_MAIL}
     password: ${APP_PASSWORD}
     properties:
       mail:
@@ -33,6 +36,6 @@ server:
   port: 2706
 
 jwt:
-  secret: 2c4d7f8910a6bcde1234567890abcdef12345678
+  secret: ${JWT_SECRET}
   expiration: 604800
 
