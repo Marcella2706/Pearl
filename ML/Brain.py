@@ -77,7 +77,7 @@ class_names = ['glioma', 'meningioma', 'no_tumor', 'pituitary']
 # def home():
 #     return render_template("index.html")
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict_brain", methods=["POST"])
 def predict():
     if "file" not in request.files:
         return jsonify({"error": "No file provided"}), 400
