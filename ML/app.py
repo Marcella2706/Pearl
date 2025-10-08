@@ -2,14 +2,12 @@
 import torch
 import torch.nn as nn
 from torchvision import models, transforms
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request
 from PIL import Image
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
-import cv2
 import cv2
 import torch
 
@@ -66,7 +64,7 @@ data_transforms = transforms.Compose([
 model = models.resnet18(pretrained=False)
 model.fc = nn.Linear(model.fc.in_features, 4) 
 
-model.load_state_dict(torch.load("ML/Brain_Xray_Classification.pth", map_location=device))
+model.load_state_dict(torch.load("Brain_Xray_Classification.pth", map_location=device))
 model.to(device)
 model.eval()
 
