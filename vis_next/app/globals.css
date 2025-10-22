@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+.dark {
+  --background: #000000;
+  --opposite-background: #ffffff;
+  --background-secondary: #1a1a1a;
+  --background-tertiary: #2a2a2a;
+  --foreground: #ffffff;
+  --foreground-muted: #a3a3a3;
+  --accent: #a0a0a0;
+  --accent-hover: #737373;
+  --border: #404040;
+  --secondly: #575d69;
+  --secondary: #f1f5f9;
+}
+
+.light {
+  --background: #ffffff;
+  --opposite-background: #000000;
+  --background-secondary: #f0fdf4;
+  --background-tertiary: #dcfce7;
+  --foreground: #14532d;
+  --foreground-muted: #166534;
+  --accent: #18753c;
+  --accent-hover: #166031;
+  --border: #bbf7d0;
+  --secondly: #a1a7ac;
+  --secondary: #07090c;
+}
+.rose {
+  --background: #ffffff;
+  --opposite-background: #000000;
+  --background-secondary: #fff1f2;
+  --background-tertiary: #ffe4e6;
+  --foreground: #881337;
+  --foreground-muted: #9f1239;
+  --accent: #f43f5e;
+  --accent-hover: #e11d48;
+  --border: #fecdd3;
+  --secondly: #a8b1b9;
+  --secondary: #1f2937;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-tertiary: var(--background-tertiary);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-border: var(--border);
+  --color-secondly: var(--secondly);
+  --color-secondary: var(--secondary);
+  --color-opps: var(--opposite-background);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 0.3s;
+  transition-timing-function: ease;
+}
