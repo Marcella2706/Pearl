@@ -70,7 +70,7 @@ model.fc = nn.Sequential(
     )
 
 
-model.load_state_dict(torch.load("ML/woundd.pth", map_location=device))
+model.load_state_dict(torch.load("woundd.pth", map_location=device))
 model.to(device)
 model.eval()
 
@@ -139,6 +139,6 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=1000);
+    app.run(debug=True, host="127.0.0.1", port=5000)
 
 

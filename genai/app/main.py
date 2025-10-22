@@ -61,7 +61,7 @@ def BrainXrayNode(state:ChatStateMain) -> ChatStateMain:
     response = requests.get(image_url)
     response.raise_for_status()
     image_bytes = response.content
-    destination_url = "http://localhost:5000/predict"
+    destination_url = "http://127.0.0.1:5000/predict_brain"
     files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
     response = requests.post(destination_url, files=files)
     response.raise_for_status()
@@ -85,16 +85,58 @@ def LiverXRayNode(state:ChatStateMain) -> ChatStateMain:
     return state
 
 def ChestXRayNode(state:ChatStateMain) -> ChatStateMain:
-    """Handles the Chest X-Ray Classification."""
-    return state
+    """Handles Lung X-Ray Classification."""
+    image_url = state.get("imageURL")
+    if not image_url:
+        raise ValueError("No image URL provided in state.")
+
+    response = requests.get(image_url)
+    response.raise_for_status()
+    image_bytes = response.content
+
+    destination_url = "http://127.0.0.1:5000/predict_lung"
+    files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
+    response = requests.post(destination_url, files=files)
+    response.raise_for_status()
+    result = response.json()
+
+    cam_image_path = f"static/lung_cam_image.jpg"  
+    OBJECT_NAME = f"images/lung/{uuid.uuid4().hex}.jpg"
+    s3Client.upload_file(cam_image_path, BUCKET_NAME, OBJECT_NAME)
+    public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
+
+    return {"prediction": result.get("prediction"),
+            "imageURL": public_url}
 
 def HeartNode(state:ChatStateMain) -> ChatStateMain:
     """Handles the Brain X-Ray."""
     return state
 
-def WoundNode(state:ChatStateMain) -> ChatStateMain:
-    """Handles the Wound X-Ray."""
-    return state
+def WoundNode(state: ChatStateMain) -> ChatStateMain:
+    """Handles the Wound X-Ray Classification."""
+    image_url = state.get("imageURL")
+    if not image_url:
+        raise ValueError("No image URL provided in state.")
+
+    response = requests.get(image_url)
+    response.raise_for_status()
+    image_bytes = response.content
+
+    destination_url = "http://127.0.0.1:5000/predict_wound" 
+    files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
+    response = requests.post(destination_url, files=files)
+    response.raise_for_status()
+    result = response.json()
+
+    cam_image_path = f"static/cam_wound_image.jpg"  
+    OBJECT_NAME = f"images/wound/{uuid.uuid4().hex}.jpg"
+    s3Client.upload_file(cam_image_path, BUCKET_NAME, OBJECT_NAME)
+    public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
+
+    return {
+        "prediction": result.get("prediction"),
+        "imageURL": public_url
+    }
 
 def pdfSummarizerNode(state:ChatStateMain) -> ChatStateMain:
     return state
@@ -118,19 +160,33 @@ def clinicalNode(state:ChatStateMain)-> ChatStateMain:
     response=openAi_Client.invoke([system_message]+[HumanMessage(content=state.get("messages")[-1].content)])
     return {"messages":AIMessage(response.content)}
 
-def imageClassifier(state:ChatStateMain) -> Literal["xrayClassifierNode", "HeartNode", "WoundNode"]:
-    """Handles the Image Classification."""
-    imageUrl=state.get("imageURL")
-    return "xrayClassifierNode"
-    if "xray" in imageUrl.lower(): return "xrayClassifierNode"
-    if "wound" in imageUrl.lower(): return "WoundNode"
-    return "HeartNode"
+def imageClassifier(state: ChatStateMain) -> Literal["xrayClassifierNode", "HeartNode", "WoundNode"]:
+    """Routes based on message content and whether an image is expected."""
+    messages = state.get("messages")
+    last_message = messages[-1].content.lower() if messages else ""
+
+    if "heart" in last_message:
+        return "HeartNode"
+    elif "xray" in last_message and state.get("imageURL"):
+        return "xrayClassifierNode"
+    elif "wound" in last_message and state.get("imageURL"):
+        return "WoundNode"
+    else:
+        return "xrayClassifierNode" if state.get("imageURL") else "HeartNode"
 
 def xrayClassifier(state:ChatStateMain) -> Literal["BrainXRayNode","LiverXRayNode","ChestXRayNode"]:
     """Handles the X-Ray Classification."""
-    imageUrl=state.get("imageURL")
-    if "brain" in imageUrl.lower(): return "BrainXRayNode"
-    if "liver" in imageUrl.lower(): return "LiverXRayNode"
+    messages=state.get("messages")
+    last_message = messages[-1].content.lower()
+
+    if "brain" in last_message:
+        return "BrainXRayNode"
+    elif "liver" in last_message:
+        return "LiverXRayNode"
+    elif "chest" in last_message:
+        return "ChestXRayNode"
+    if "brain" in last_message.lower(): return "BrainXRayNode"
+    if "liver" in last_message.lower(): return "LiverXRayNode"
     return "ChestXRayNode"
 
 builder=StateGraph(ChatStateMain)
