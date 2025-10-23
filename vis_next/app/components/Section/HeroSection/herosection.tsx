@@ -16,8 +16,8 @@ const HeroSection = () => {
   return (
     <section className="mt-25">
       <div className="flex flex-col items-center max-w-4xl mx-auto text-center bg-no-repeat bg-top bg-contain">
-        <div className="flex items-center justify-center gap-2.5 px-3 py-1 rounded-full border border-secondly bg-background backdrop-blur-sm shadow-sm mb-4">
-          <span className="text-secondary text-base font-normal">Introducing Jivika</span>
+        <div className="flex items-center justify-center gap-2.5 px-3 py-1 rounded-full border border-accent bg-background backdrop-blur-sm shadow-sm mb-4">
+          <span className="text-foreground text-base font-normal">Introducing Jivika</span>
           <Image
             src={'/images/logo.png'} 
             alt="Jivika logo"
@@ -34,7 +34,7 @@ const HeroSection = () => {
                 <MaskText
                   phrases={mobilePhrases}
                   tag="h1"
-                  sizeClass="text-5xl sm:text-6xl md:text-8xl text-secondary font-normal "
+                  sizeClass="text-5xl sm:text-6xl md:text-8xl text-foreground font-normal "
                 />
               </div>
 
@@ -42,8 +42,8 @@ const HeroSection = () => {
                 <MaskText
                   phrases={mobileParagraphPhrases}
                   tag="p"
-                  sizeClass="text-base sm:text-2xl md:text-3xl font-normal text-secondly"
-                  className="text-secondly  font-normal"
+                  sizeClass="text-base sm:text-2xl md:text-3xl font-normal text-accent-hover"
+                  className="text-accent-hover font-normal"
                 />
               </div>
             </>
@@ -53,7 +53,7 @@ const HeroSection = () => {
                 <MaskText
                   phrases={phrases}
                   tag="h1"
-                  sizeClass="text-5xl md:text-7xl lg:text-8xl text-secondary font-normal"
+                  sizeClass="text-5xl md:text-7xl lg:text-8xl text-foreground font-normal"
                 />
               </div>
 
@@ -62,7 +62,7 @@ const HeroSection = () => {
                   phrases={paragraphPhrases}
                   tag="p"
                   sizeClass="text-md sm:text-lg md:text-xl lg:text-2xl font-normal"
-                  className="text-secondly font-normal"
+                  className="text-accent-hover font-normal"
                 />
               </div>
             </>

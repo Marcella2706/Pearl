@@ -39,14 +39,14 @@ export default function Profile() {
     {
       label: 'W-1',
       segments: [
-        { color: 'bg-accent', width: 'w-7/12', label: 'Fulfilled' },
+        { color: 'bg-primary', width: 'w-7/12', label: 'Fulfilled' },
         { color: 'bg-background-tertiary', width: 'w-3/12', label: 'Booked' },
       ],
     },
     {
       label: 'W-2',
       segments: [
-        { color: 'bg-accent-hover', width: 'w-5/12', label: 'Arrived' },
+        { color: 'bg-foreground', width: 'w-5/12', label: 'Arrived' },
         { color: 'bg-background-tertiary', width: 'w-2/12', label: 'Booked' },
       ],
     },
@@ -79,7 +79,7 @@ export default function Profile() {
                 aria-label="Toggle bookmark"
               >
                 {isBookmarked ? (
-                  <Bookmark size={24} className="fill-accent" />
+                  <Bookmark size={24} className="fill-primary" />
                 ) : (
                   <Bookmark size={24} />
                 )}
@@ -94,7 +94,7 @@ export default function Profile() {
             </p>
 
             <div className="flex items-center justify-between mt-5 pt-5 border-t border-border">
-              <button className="bg-accent text-background font-semibold rounded-full px-10 py-3 hover:bg-accent-hover transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 shrink-0">
+              <button className="bg-primary text-background font-semibold rounded-full px-10 py-3 hover:bg-primary transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 shrink-0">
                 Book
               </button>
 
@@ -134,7 +134,7 @@ export default function Profile() {
           <div className="flex items-center space-x-8 mt-4">
             <div className="flex items-center space-x-3">
               <div className="shrink-0 w-10 h-10 rounded-full bg-background-tertiary flex items-center justify-center">
-                <Car size={20} className="text-accent" />
+                <Car size={20} className="text-primary" />
               </div>
               <div>
                 <span className="text-sm text-foreground-muted">Distance</span>
@@ -161,10 +161,10 @@ export default function Profile() {
           
  
           <div className="flex flex-wrap gap-x-4 gap-y-2 mb-6">
-            <LegendItem color="bg-accent" text="Fulfilled" />
-            <LegendItem color="bg-accent-hover" text="Arrived" />
+            <LegendItem color="bg-primary" text="Fulfilled" />
+            <LegendItem color="bg-foreground" text="Arrived" />
             <LegendItem color="bg-background-tertiary" text="Booked" />
-            <LegendItem color="bg-secondly" text="..." />
+            <LegendItem color="bg-foreground-muted" text="..." />
           </div>
 
           <div className="space-y-5">

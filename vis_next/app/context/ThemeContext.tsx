@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "rose";
+type Theme =  "dark" | "light" | "rose" | "thunder";
 
 interface ThemeContextType {
   theme: Theme;
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setMounted(true);
     // Load theme from localStorage or default to light
     const savedTheme = localStorage.getItem("theme") as Theme;
-    if (savedTheme && ["dark", "light", "rose"].includes(savedTheme)) {
+    if (savedTheme && ["dark", "light", "rose", "thunder"].includes(savedTheme)) {
       setTheme(savedTheme);
       document.documentElement.className = savedTheme;
     } else {

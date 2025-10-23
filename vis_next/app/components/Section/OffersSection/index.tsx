@@ -19,20 +19,20 @@ const OffersSection = () => {
           <MaskText
             phrases={desktopHeaderPhrases}
             tag="h1"
-            sizeClass="text-4xl md:text-6xl lg:text-7xl text-secondary" 
+            sizeClass="text-4xl md:text-6xl lg:text-7xl text-forground" 
           />
 
           {isMobile ? (
             <MaskText
               phrases={mobileParagraphPhrase}
               tag="p"
-              sizeClass="max-w-2xl text-foreground-muted text-xl md:text-base font-normal leading-relaxed text-secondly"
+              sizeClass="max-w-2xl text-foreground-muted text-xl md:text-base font-normal leading-relaxed text-foreground-muted"
             />
           ) : (
             <MaskText
               phrases={desktopParagraphPhrase}
               tag="p"
-              sizeClass="max-w-2xl text-foreground-muted text-xl font-normal leading-relaxed text-secondly"
+              sizeClass="max-w-2xl text-foreground-muted text-xl font-normal leading-relaxed text-foreground-muted"
             />
           )}
         </header>
@@ -42,7 +42,7 @@ const OffersSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 md:gap-8">
           {/* First Card - spans 2 columns on md+ */}
           <div
-            className="col-span-1 md:col-span-2 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-secondary flex flex-col relative"
+            className="col-span-1 md:col-span-2 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
               backgroundImage: "url('/images/offer_card_grid_1.png')",
               backgroundRepeat: 'no-repeat',
@@ -51,14 +51,14 @@ const OffersSection = () => {
             }}
           >
             <div className="mt-12 md:mt-6 relative flex justify-center flex-1">
-              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-secondary z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-forground z-10" />
             </div>
 
             <div className="p-10 md:p-6 max-w-xl flex flex-col gap-4 relative z-20">
-              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-secondary">
+              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-forground">
                 {offers[0].title}
               </h2>
-              <p className="text-secondly text-base font-normal leading-relaxed">
+              <p className="text-foreground-muted text-base font-normal leading-relaxed">
                 {offers[0].details}
               </p>
             </div>
@@ -66,7 +66,7 @@ const OffersSection = () => {
 
           {/* Second Card - spans 1 column on md+ */}
           <div
-            className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-secondary flex flex-col relative"
+            className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
               backgroundImage: "url('/images/offer_card_grid_2.png')",
               backgroundRepeat: 'no-repeat',
@@ -75,14 +75,14 @@ const OffersSection = () => {
             }}
           >
             <div className="mt-12 md:mt-6 relative flex justify-center flex-1">
-              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-secondary z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-forground z-10" />
             </div>
 
             <div className="p-10 md:p-6 flex flex-col gap-4 relative z-20">
-              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-secondary">
+              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-forground">
                 {offers[1].title}
               </h2>
-              <p className="text-secondly text-base font-normal leading-relaxed">
+              <p className="text-foreground-muted text-base font-normal leading-relaxed">
                 {offers[1].details}
               </p>
             </div>
@@ -93,7 +93,7 @@ const OffersSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8">
           {/* Third Card - single column on md+ */}
           <div
-            className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-secondary flex flex-col relative"
+            className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
               backgroundImage: "url('/images/offer_card_grid_3.png')",
               backgroundRepeat: 'no-repeat',
@@ -102,20 +102,20 @@ const OffersSection = () => {
             }}
           >
             <div className="mt-12 md:mt-6 relative flex justify-center flex-1">
-              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-secondary z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-forground z-10" />
             </div>
 
             <div className="p-10 md:p-6 flex flex-col gap-4 relative z-20">
-              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-secondary">
+              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-forground">
                 {offers[2].title}
               </h2>
-              <p className="text-secondly text-base font-normal leading-relaxed">
+              <p className="text-foreground-muted text-base font-normal leading-relaxed">
                 {offers[2].details}
               </p>
             </div>
           </div>
           <div
-            className="col-span-1 md:col-span-2 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-secondary flex flex-col relative"
+            className="col-span-1 md:col-span-2 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
               backgroundImage: "url('/images/offer_card_grid_4.png')",
               backgroundRepeat: 'no-repeat',
@@ -124,14 +124,14 @@ const OffersSection = () => {
             }}
           >
             <div className="mt-12 md:mt-6 relative flex justify-center flex-1">
-              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-secondary z-10" />
+              <div className="absolute bottom-0 left-0 right-0 h-64 bg-linear-to-t from-transparent to-background-forground z-10" />
             </div>
 
             <div className="p-10 md:p-6 max-w-xl flex flex-col gap-4 relative z-20">
-              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-secondary">
+              <h2 className="text-3xl md:text-2xl font-semibold leading-tight text-forground">
                 {offers[3].title}
               </h2>
-              <p className="text-secondly text-base font-normal leading-relaxed">
+              <p className="text-foreground-muted text-base font-normal leading-relaxed">
                 {offers[3].details}
               </p>
             </div>

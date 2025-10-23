@@ -37,12 +37,12 @@ const FinancialFreedom = () => {
               <MaskText 
                 phrases={mobileHeaderPhrase} 
                 tag="h1" 
-                sizeClass="text-6xl md:text-9xl font-normal text-secondary"
+                sizeClass="text-6xl md:text-9xl font-normal text-foreground"
               />
               <MaskText 
                 phrases={mobileParagraphPhrase} 
                 tag="p" 
-                sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
               />
             </>
           ) : (
@@ -50,12 +50,12 @@ const FinancialFreedom = () => {
               <MaskText 
                 phrases={desktopHeaderPhrase} 
                 tag="h1" 
-                sizeClass="text-6xl md:text-[4.75rem] font-normal text-secondary"
+                sizeClass="text-6xl md:text-[4.75rem] font-normal text-foreground"
               />
               <MaskText 
                 phrases={desktopParagraphPhrase} 
                 tag="p" 
-                sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
               />
             </>
           )}
@@ -64,36 +64,36 @@ const FinancialFreedom = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-30">
           {edges.map((edge, i) => (
             <div key={i} className="flex flex-col gap-2.5">
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center  ">
                 <Image src={edge.icon} alt="icon" width={30} height={30}/>
                 <MaskText 
                   phrases={new Array(edge.point)} 
                   tag="h3" 
-                  sizeClass="text-2xl font-medium text-secondary"
+                  sizeClass="text-2xl font-medium text-foreground"
                 />
               </div>
               <MaskText 
                 phrases={new Array(edge.details)} 
                 tag="p" 
-                sizeClass="max-w-[26rem] text-secondly text-base font-normal leading-6"
+                sizeClass="max-w-[26rem] text-foreground-muted text-base font-normal leading-6"
               />
             </div>
           ))}
         </div>
       </div>
 
-      <div className="max-h-219 py-33 px-18 md:py-8 md:px-6 bg-accent">
+      <div className="max-h-219 py-33 px-18 md:py-8 md:px-6 bg-primary">
         {isMobile ? (
           <MaskText 
             phrases={mobileBriefNotePhrase} 
             tag="p" 
-            sizeClass="text-background text-[3.75rem] md:text-[8rem] font-normal max-w-[1440px] mx-auto"
+            sizeClass="text-foreground text-[3.75rem] md:text-[8rem] font-normal max-w-[1440px] mx-auto"
           />
         ) : (
           <MaskText 
             phrases={desktopBriefNotePhrase} 
             tag="p" 
-            sizeClass="text-background text-[3.75rem] md:text-[8rem] font-normal max-w-[1440px] mx-auto"
+            sizeClass="text-foreground text-[3.75rem] md:text-[8rem] font-normal max-w-[1440px] mx-auto"
           />
         )}
       </div>

@@ -23,12 +23,12 @@ const FinancialFuture = () => {
               <MaskText 
                 phrases={mobileHeaderPhrase} 
                 tag="h1" 
-                sizeClass="text-6xl md:text-9xl font-normal text-secondary"
+                sizeClass="text-6xl md:text-9xl font-normal text-foreground"
               />
               <MaskText 
                 phrases={mobileParagraphPhrase} 
                 tag="p" 
-                sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
               />
             </>
           ) : (
@@ -36,12 +36,12 @@ const FinancialFuture = () => {
               <MaskText 
                 phrases={desktopHeaderPhrase} 
                 tag="h1" 
-                sizeClass="text-6xl md:text-[4.75rem] font-normal text-secondary"
+                sizeClass="text-6xl md:text-[4.75rem] font-normal text-foreground"
               />
               <MaskText 
                 phrases={desktopParagraphPhrase} 
                 tag="p" 
-                sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
               />
             </>
           )}
@@ -51,18 +51,18 @@ const FinancialFuture = () => {
           {cardsInfo.map((info, i) => (
             <div 
               key={i} 
-              className="h-110 md:h-167.5 rounded-xl border border-border bg-background-secondary transition-all duration-300"
+              className="h-110 md:h-167.5 rounded-xl border border-border bg-background-foreground transition-all duration-300"
             >
               <div className="flex flex-col gap-4 max-w-129 mx-6 my-6 md:mx-13 md:my-13 md:mb-12">
                 <MaskText 
                   phrases={new Array(info.title)} 
                   tag="h3" 
-                  sizeClass="text-2xl md:text-4xl font-medium leading-7 text-secondary transition-colors duration-300"
+                  sizeClass="text-2xl md:text-4xl font-medium leading-7 text-foreground transition-colors duration-300"
                 />
                 <MaskText 
                   phrases={new Array(info.details)} 
                   tag="p" 
-                  sizeClass="text-base md:text-xl font-normal leading-6 md:leading-7 text-secondly transition-colors duration-300"
+                  sizeClass="text-base md:text-xl font-normal leading-6 md:leading-7 text-foreground-muted transition-colors duration-300"
                 />
               </div>
               <div 
@@ -86,12 +86,12 @@ const FinancialFuture = () => {
               <MaskText 
                 phrases={new Array(stat.number)} 
                 tag="h1" 
-                sizeClass="text-xl md:text-[5rem] font-semibold text-secondary transition-colors duration-300"
+                sizeClass="text-xl md:text-[5rem] font-semibold text-foreground transition-colors duration-300"
               />
               <MaskText 
                 phrases={new Array(stat.subtitle)} 
                 tag="p" 
-                sizeClass="text-secondly text-xs md:text-lg font-medium uppercase transition-colors duration-300"
+                sizeClass="text-foreground-muted text-xs md:text-lg font-medium uppercase transition-colors duration-300"
               />
             </div>
           ))}

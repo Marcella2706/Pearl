@@ -117,6 +117,8 @@ export default function AuthPage() {
     ? "#94a3b8"
     : theme === "light"
     ? "#10b981"
+    : theme === "thunder"
+    ? "yellow"
     : "#fb7185";
   return isOtpPage ? (
     <div>
@@ -126,27 +128,33 @@ export default function AuthPage() {
     <div>
       
       <section className="relative min-h-screen bg-background overflow-hidden transition-colors duration-300">
-        {theme=="dark"&&<div className="absolute inset-0">
+        {theme!="light"&&theme!="rose"&&<div className="absolute inset-0">
            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(248,250,252,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(248,250,252,0.08)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(248,250,252,0.9)_70%,transparent_110%)]" />
         </div>}
          
-        {theme!="dark"&&<div className="absolute inset-0">
+        {theme!="dark"&&theme!="thunder"&&<div className="absolute inset-0">
            <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
         </div>}
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-opps/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-opps/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div
+          className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse"
+          style={{ backgroundColor: color, opacity: 0.1 }}
+        />
+        <div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse delay-1000"
+          style={{ backgroundColor: color, opacity: 0.2 }}
+        />
         <div className="flex justify-center items-center h-screen ">
-          <Card className="w-[400px] bg-background/90 backdrop-blur-xl border border-secondly shadow-xl rounded-lg transition-all duration-300">
+          <Card className="w-[400px] bg-background/90 backdrop-blur-xl border border-border shadow-xl rounded-lg transition-all duration-300">
             <div className="p-6 space-y-6">
               <div className="space-y-2 text-center">
-                <h2 className="text-2xl font-bold tracking-tight text-secondary transition-all duration-300">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground transition-all duration-300">
                   {isForgotPassword
                     ? "Reset Password"
                     : isSignUp
                       ? "Create Account"
                       : "Welcome Back"}
                 </h2>
-                <p className="text-sm text-secondly transition-colors duration-300">
+                <p className="text-sm text-foreground-muted transition-colors duration-300">
                   {isForgotPassword
                     ? "Enter your email to reset password"
                     : isSignUp
@@ -165,7 +173,7 @@ export default function AuthPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full flex items-center justify-center gap-3 bg-secondly/20 border border-secondly text-secondary py-2 rounded-lg hover:bg-background/20 transition-all duration-300"
+                      className="w-full flex items-center justify-center gap-3 bg-foreground-muted/20 border border-border text-foreground py-2 rounded-lg hover:bg-background/20 transition-all duration-300"
                       onClick={() => googlelogin()}
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
@@ -190,7 +198,7 @@ export default function AuthPage() {
                           d="M12 4.8c1.7 0 3.2.6 4.4 1.7L19.5 4C17.5 2.2 14.9 1 12 1 8.4 1 5.1 3.2 3.4 6.7l3.4 2.6C7 6.8 9.3 4.8 12 4.8z"
                         />
                         </svg>
-                      <span className="text-secondary font-medium transition-colors duration-300">
+                      <span className="text-foreground font-medium transition-colors duration-300">
                         Continue With Google
                       </span>
                     </Button>
@@ -207,18 +215,18 @@ export default function AuthPage() {
                       exit={{ opacity: 0, y: -20 }}
                       className="space-y-2"
                     >
-                      <Label htmlFor="name" className="text-sm text-secondly transition-colors duration-300">
+                      <Label htmlFor="name" className="text-sm text-foreground-muted transition-colors duration-300">
                         Name
                       </Label>
                       <div className="relative">
                         <UserIcon
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondly transition-colors duration-300"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted transition-colors duration-300"
                           size={18}
                         />
                         <Input
                           id="name"
                           {...register("name")}
-                          className="pl-10 bg-secondly/20 border border-secondly text-secondary py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
+                          className="pl-10 bg-foreground-muted/20 border border-border text-foreground py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
                           required
                         />
                       </div>
@@ -227,38 +235,38 @@ export default function AuthPage() {
                 </AnimatePresence>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm text-secondly transition-colors duration-300">
+                  <Label htmlFor="email" className="text-sm text-foreground-muted transition-colors duration-300">
                     Email
                   </Label>
                   <div className="relative">
                     <MailIcon
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondly transition-colors duration-300"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted transition-colors duration-300"
                       size={18}
                     />
                     <Input
                       id="email"
                       {...register("email")}
                       type="email"
-                      className="pl-10 bg-secondly/20 border border-secondly text-secondary py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
+                      className="pl-10 bg-foreground-muted/20 border border-border text-foreground py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm text-secondly transition-colors duration-300">
+                  <Label htmlFor="password" className="text-sm text-foreground-muted transition-colors duration-300">
                     Password
                   </Label>
                   <div className="relative">
                     <LockIcon
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondly transition-colors duration-300"
+                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted transition-colors duration-300"
                       size={18}
                     />
                     <Input
                       id="password"
                       {...register("password")}
                       type="password"
-                      className="pl-10 bg-secondly/20 border border-secondly text-secondary py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
+                      className="pl-10 bg-foreground-muted/20 border border-border text-foreground py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
                       required
                     />
                   </div>
@@ -274,20 +282,20 @@ export default function AuthPage() {
                     >
                       <Label
                         htmlFor="confirmPassword"
-                        className="text-sm text-secondly transition-colors duration-300"
+                        className="text-sm text-foreground-muted transition-colors duration-300"
                       >
                         Confirm Password
                       </Label>
                       <div className="relative">
                         <LockIcon
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondly transition-colors duration-300"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground-muted transition-colors duration-300"
                           size={18}
                         />
                         <Input
                           id="confirmPassword"
                           {...register("confirmPassword")}
                           type="password"
-                          className="pl-10 bg-secondly/20 border border-secondly text-secondary py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
+                          className="pl-10 bg-foreground-muted/20 border border-foreground-muted text-foreground py-2 rounded-lg focus:border-accent focus:ring-accent/20 transition-all duration-300"
                           required
                         />
                       </div>
@@ -303,7 +311,7 @@ export default function AuthPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-foreground/90 text-background font-semibold hover:bg-foreground transition-all duration-200 rounded-lg py-2 shadow-lg"
+                  className="w-full bg-primary/90 text-background font-semibold hover:bg-primary transition-all duration-200 rounded-lg py-2 shadow-lg"
                 >
                   {isForgotPassword
                     ? "Reset Password"
@@ -315,7 +323,7 @@ export default function AuthPage() {
 
               <Button
                 variant="link"
-                className="w-full text-secondly hover:text-secondary transition-colors duration-300"
+                className="w-full text-foreground-muted hover:text-foreground transition-colors duration-300"
                 onClick={() => {
                   setIsForgotPassword(false);
                   setIsSignUp(!isSignUp);
@@ -328,7 +336,7 @@ export default function AuthPage() {
               {!isSignUp && (
                 <Button
                   variant="link"
-                  className="w-full text-secondly hover:text-secondary transition-colors duration-300"
+                  className="w-full text-foreground-muted hover:text-foreground transition-colors duration-300"
                   onClick={() => setIsForgotPassword(!isForgotPassword)}
                 >
                   {isForgotPassword ? "Back to Sign In" : "Forgot Password?"}

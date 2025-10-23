@@ -43,7 +43,7 @@ const MaskText = ({ phrases, tag = 'h1', sizeClass, className = '' }: MaskTextPr
             custom={index}
             className="inline-block"
           >
-            <Tag className={`${resolvedSizeClass} font-bold leading-tight text-foreground ${className}`}>
+            <Tag className={`${resolvedSizeClass} font-bold leading-tight text-forground-muted ${className}`}>
               {phrase}
             </Tag>
           </motion.div>

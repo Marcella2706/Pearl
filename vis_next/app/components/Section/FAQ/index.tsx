@@ -36,13 +36,13 @@ const FAQ = () => {
             <MaskText 
               phrases={mobileHeaderPhrase} 
               tag="h1" 
-              sizeClass="text-[3.75rem] font-normal text-secondary"
+              sizeClass="text-[3.75rem] font-normal text-foreground"
             />
           ) : (
             <MaskText 
               phrases={desktopHeaderPhrase} 
               tag="h1" 
-              sizeClass="text-[6rem] font-normal text-secondary"
+              sizeClass="text-[6rem] font-normal text-foreground"
             />
           )}
         </div>
@@ -55,11 +55,11 @@ const FAQ = () => {
               animate={isInView ? 'open' : ''}
               custom={index}
               key={index}
-              className="flex flex-col pb-4 border-b border-secondly overflow-hidden"
+              className="flex flex-col pb-4 border-b border-border overflow-hidden"
             >
               <motion.div 
                 onClick={() => toggleItem(index)}
-                className="flex items-center justify-between cursor-pointer text-2xl md:text-base font-medium mb-6 md:mb-8 gap-4 text-secondary"
+                className="flex items-center justify-between cursor-pointer text-2xl md:text-base font-medium mb-6 md:mb-8 gap-4 text-foreground"
               >
                 {item.question}
                 <ArrowDown className={`transition-transform duration-300 ${openItem === index ? 'rotate-180' : ''}`}></ArrowDown>
@@ -73,7 +73,7 @@ const FAQ = () => {
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="text-secondly text-base font-normal leading-6"
+                    className="text-foreground-muted text-base font-normal leading-6"
                   >
                     {item.answer}
                   </motion.div>

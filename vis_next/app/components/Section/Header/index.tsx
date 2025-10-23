@@ -32,7 +32,7 @@ const Header = () => {
     <section className="py-3 border-b border-secondly">
       <div className="flex items-center justify-between w-[90%] max-w-[1440px] mx-auto">
         {/* Logo */}
-        <div className='flex items-center gap-2 font-bold text-xl text-secondary'>
+        <div className='flex items-center gap-2 font-bold text-xl text-foreground'>
           <Image 
             src={'/images/logo.png'} 
             alt="logo" 

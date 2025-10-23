@@ -9,18 +9,18 @@ const StarRating = ({ rating = 4.4, starSize = 18 }) => {
     <div className="flex items-center space-x-0.5">
       <span className="text-base font-bold text-foreground mr-2">{rating.toFixed(1)}</span>
       {[...Array(fullStars)].map((_, i) => (
-        <Star key={`full-${i}`} size={starSize} className="text-accent fill-accent" />
+        <Star key={`full-${i}`} size={starSize} className="text-primary fill-primary" />
       ))}
       {hasHalfStar && (
         <div className="relative">
-          <Star size={starSize} className="text-secondly fill-secondly" />
+          <Star size={starSize} className="text-primary fill-primary" />
           <div className="absolute top-0 left-0 h-full overflow-hidden" style={{ width: '50%' }}>
             <Star size={starSize} className="text-accent fill-accent" />
           </div>
         </div>
       )}
       {[...Array(emptyStars)].map((_, i) => (
-        <Star key={`empty-${i}`} size={starSize} className="text-secondly fill-secondly" />
+        <Star key={`empty-${i}`} size={starSize} className="text-foreground-muted fill-foreground-muted" />
       ))}
     </div>
   );

@@ -38,9 +38,9 @@ export default function ExploreHeader({
             <button
               aria-label="Go back"
               onClick={handleBack}
-              className="flex items-center justify-center h-10 w-10 rounded-lg bg-accent hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent/60 transition-shadow shadow-sm"
+              className="flex items-center justify-center h-10 w-10 rounded-lg bg-background hover:bg-accent-hover focus:outline-none focus:ring-2 focus:ring-accent/60 transition-shadow shadow-sm"
             >
-              <ArrowLeft className="h-5 w-5 text-secondary" />
+              <ArrowLeft className="h-5 w-5 text-primary" />
             </button>
 
             {/* Brand */}
@@ -57,9 +57,9 @@ export default function ExploreHeader({
               </div>
 
               <div className="flex flex-col leading-tight">
-                <span className="font-semibold text-lg text-secondary tracking-tight">{title}</span>
+                <span className="font-semibold text-lg text-foreground tracking-tight">{title}</span>
                 {subtitle ? (
-                  <span className="text-xs text-secondly -mt-0.5">{subtitle}</span>
+                  <span className="text-xs text-foregound-muted -mt-0.5">{subtitle}</span>
                 ) : null}
               </div>
             </div>

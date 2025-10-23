@@ -100,12 +100,12 @@ const AnimatedWord = ({
   >
     {title.split('').map((char, i) =>
       char === ' ' ? (
-        <motion.span key={i} className="relative inline-block whitespace-nowrap text-secondary text-base font-normal md:text-secondary">&nbsp;</motion.span>
+        <motion.span key={i} className="relative inline-block whitespace-nowrap text-foreground text-base font-normal md:text-foreground">&nbsp;</motion.span>
       ) : (
         <motion.span 
           variants={animations as any} 
           key={i}
-          className="relative inline-block whitespace-nowrap text-secondary text-base font-normal md:text-secondary"
+          className="relative inline-block whitespace-nowrap text-foreground text-base font-normal md:text-foreground"
         >
           {char}
         </motion.span>

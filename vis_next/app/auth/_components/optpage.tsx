@@ -41,7 +41,7 @@ const handleResendOTP = () => {
       <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-foreground/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-foreground/5 rounded-full blur-3xl animate-pulse delay-1000" />
       <div className="w-96 rounded-lg p-8 bg-background-secondary/90 backdrop-blur-xl border border-border shadow-xl transition-all duration-300 relative z-10">
-        <h1 className="text-2xl font-bold text-center text-secondary transition-colors duration-300">
+        <h1 className="text-2xl font-bold text-center text-foreground transition-colors duration-300">
           Enter OTP
         </h1>
         <p className="text-sm text-center mb-4 text-secondly transition-colors duration-300">
@@ -61,7 +61,7 @@ const handleResendOTP = () => {
             variant="outline"
             onClick={handleResendOTP}
             disabled={isSubmitting}
-            className="py-2 px-4 rounded-lg bg-background-tertiary border border-border text-secondary hover:bg-background-secondary transition-all duration-300"
+            className="py-2 px-4 rounded-lg bg-background-tertiary border border-border text-foreground hover:bg-background-secondary transition-all duration-300"
           >
             Resend OTP
           </Button>

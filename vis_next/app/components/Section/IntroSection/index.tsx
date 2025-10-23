@@ -24,12 +24,12 @@ const IntroSection = () => {
                 <MaskText 
                   phrases={mobileHeaderPhrase} 
                   tag="h1" 
-                  sizeClass="text-6xl md:text-9xl font-normal text-secondary"
+                  sizeClass="text-6xl md:text-9xl font-normal text-foreground"
                 />
                 <MaskText 
                   phrases={mobileParagraphPhrase} 
                   tag="p" 
-                  sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                  sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
                 />
               </>
             ) : (
@@ -37,12 +37,12 @@ const IntroSection = () => {
                 <MaskText 
                   phrases={desktopHeaderPhrase} 
                   tag="h1" 
-                  sizeClass="text-6xl md:text-[4.75rem] font-normal text-secondary"
+                  sizeClass="text-6xl md:text-[4.75rem] font-normal text-foreground"
                 />
                 <MaskText 
                   phrases={desktopParagraphPhrase} 
                   tag="p" 
-                  sizeClass="max-w-[41.75rem] text-secondly text-base md:text-xl font-normal leading-6 md:leading-7"
+                  sizeClass="max-w-[41.75rem] text-foreground-muted text-base md:text-xl font-normal leading-6 md:leading-7"
                 />
               </>
             )}
@@ -57,13 +57,13 @@ const IntroSection = () => {
                 <MaskText 
                   phrases={new Array(edge.point)} 
                   tag="h3" 
-                  sizeClass="text-2xl font-medium text-secondary"
+                  sizeClass="text-2xl font-medium text-foreground"
                 />
               </div>
               <MaskText 
                 phrases={new Array(edge.details)} 
                 tag="p" 
-                sizeClass="max-w-[26rem] text-secondly text-base font-normal leading-6"
+                sizeClass="max-w-[26rem] text-foreground-muted text-base font-normal leading-6"
               />
             </div>
           ))}
