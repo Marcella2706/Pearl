@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from 'react';
 import { Bookmark, Star, Car, MoreHorizontal } from 'lucide-react'; 
 import StarRating from '../../Common/StarRating/rating';
