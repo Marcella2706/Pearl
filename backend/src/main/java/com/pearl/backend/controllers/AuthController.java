@@ -1,5 +1,6 @@
-package com.pearl.backend.auth;
+package com.pearl.backend.controllers;
 
+import com.pearl.backend.auth.*;
 import com.pearl.backend.services.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
