@@ -1,4 +1,4 @@
-package com.pearl.backend.auth;
+package com.pearl.backend.controllers;
 
 import com.pearl.backend.auth.UserResponse;
 import com.pearl.backend.entities.Users;
