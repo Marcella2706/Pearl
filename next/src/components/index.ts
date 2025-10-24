@@ -1,0 +1,12 @@
+export { default as Header } from "@/components/Section/Header/index"
+export { default as GetStartedButton } from './Common/GetStartedButton';
+export { default as HeroSection } from './Section/HeroSection/herosection';
+export { default as OffersSection } from './Section/OffersSection';
+export { default as FinancialFreedom } from './Section/FinancialFreedom';
+export { default as FinancialFuture } from './Section/FinancialFuture';
+export { default as IntroSection } from './Section/IntroSection';
+export { default as FAQ } from './Section/FAQ';
+export { default as Footer } from './Section/Footer';
+export { default as Preloader } from './Preloader';
+export { default as MaskText } from './Common/MaskText';
+export { default as ThemeToggle } from './Common/ThemeToggle';

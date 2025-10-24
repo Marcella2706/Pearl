@@ -33,25 +33,25 @@ const handleResendOTP = () => {
  console.log(localStorage.getItem('currentOtp'));
 };
   return (
-    <div className="flex justify-center items-center h-screen bg-white">
+    <div className="auth-page flex justify-center items-center">
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+        <div className="auth-background-overlay absolute inset-0" />
       </div>
 
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-rose-100/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gray-100/20 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="w-96 bg-white/70 backdrop-blur-xl border border-gray-200/50 shadow-xl rounded-lg p-8">
-        <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-rose-500 via-rose-400 to-rose-400 bg-clip-text text-transparent">
+      <div className="auth-blob-1 absolute top-1/4 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse" />
+      <div className="auth-blob-2 absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="auth-card w-96 rounded-lg p-8">
+        <h1 className="auth-title text-2xl font-bold text-center">
           Enter OTP
         </h1>
-        <p className="text-sm text-gray-600 text-center mb-4">
+        <p className="auth-subtitle text-sm text-center mb-4">
           Please enter the 6-digit code sent to your device
         </p>
         
         <OTPInput length={6} onComplete={handleOTPComplete}  />
         
         {error && (
-          <p className="mt-4 text-red-500 text-sm text-center" role="alert">
+          <p className="auth-error-text mt-4 text-sm text-center" role="alert">
             {error}
           </p>
         )}
@@ -61,7 +61,7 @@ const handleResendOTP = () => {
             variant="outline"
             onClick={handleResendOTP}
             disabled={isSubmitting}
-            className="bg-gray-50/80 border border-gray-200 hover:bg-gray-100/80 text-gray-700 py-2 px-4 rounded-lg"
+            className="auth-google-btn py-2 px-4 rounded-lg"
           >
             Resend OTP
           </Button>
@@ -73,7 +73,7 @@ const handleResendOTP = () => {
             handleOTPComplete(otp)
             }}
             disabled={isSubmitting}
-            className="bg-gradient-to-r from-rose-400 via-rose-400 to-rose-300 text-white font-semibold hover:from-rose-500 hover:via-rose-400 hover:to-rose-400 transition-all duration-200 rounded-lg py-2 px-4 shadow-lg"
+            className="auth-submit-btn rounded-lg py-2 px-4"
           >
             {isSubmitting ? "Verifying..." : "Verify OTP"}
           </Button>
