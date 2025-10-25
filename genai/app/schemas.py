@@ -5,12 +5,18 @@ from datetime import datetime
 
 class MessageCreate(BaseModel):
     role: str
-    content: str
+    content: Optional[str] = None
+    image_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    prediction: Optional[str] = None
 
 class MessageResponse(BaseModel):
     id: UUID
     role: str
-    content: str
+    content: Optional[str] = None
+    image_url: Optional[str] = None
+    pdf_url: Optional[str] = None
+    prediction: Optional[str] = None
     created_at: datetime
 
     class Config:

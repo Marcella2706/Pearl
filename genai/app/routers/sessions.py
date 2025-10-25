@@ -45,7 +45,6 @@ def create_session(
     user = crud.get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     return crud.create_session(db, email, session)
 
 @router.get("/", response_model=list[schemas.SessionResponse])
@@ -57,7 +56,6 @@ def get_user_sessions(
     user = crud.get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
     return crud.get_sessions(db, user_id=user.id)
 
 @router.get("/{session_id}", response_model=schemas.SessionResponse)
@@ -82,5 +80,4 @@ def add_message(
     user = crud.get_user_by_email(db, email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
     return crud.add_message(db, session_id, message, user_email=email)

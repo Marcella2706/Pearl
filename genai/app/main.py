@@ -227,17 +227,39 @@ def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode","ChestXRayNo
     return "ChestXRayNode"
 
 
-def save_message_to_db(session_id: str, role: str, content: str):
+def save_message_to_db(
+    session_id: str,
+    role: str,
+    content: Optional[str] = None,
+    image_url: Optional[str] = None,
+    pdf_url: Optional[str] = None,
+    prediction: Optional[str] = None
+):
     db: Session = SessionLocal()
     try:
+        embedding = None
+        if content:
+            from openai import OpenAI
+            client = OpenAI()
+            embedding_response = client.embeddings.create(
+                model="text-embedding-3-small",
+                input=content
+            )
+            embedding = embedding_response.data[0].embedding
+
         message_data = {
             "role": role,
             "content": content,
-            "timestamp": datetime.now(timezone.utc)
+            "image_url": image_url,
+            "pdf_url": pdf_url,
+            "prediction": prediction,
+            "embedding": embedding
         }
-        crud.add_message(db, session_id, message_data)
+
+        crud.add_message(db, session_id, message_data, user_email=role)
     finally:
         db.close()
+
 
 
 builder = StateGraph(ChatStateMain)
