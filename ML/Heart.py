@@ -7,7 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 # Load model
-model = joblib.load('ML/Heart_model.pkl')
+model = joblib.load('Heart_model.pkl')
 
 
 # @app.route('/')

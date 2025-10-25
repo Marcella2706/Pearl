@@ -4,7 +4,7 @@ from langgraph.graph import MessagesState
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from .prompts import fixerPrompt, clinicalPrompt, brainXrayPrompt
+from app.prompts import fixerPrompt, clinicalPrompt, brainXrayPrompt
 import os
 import requests
 import boto3
@@ -15,6 +15,7 @@ from app.db import SessionLocal
 from app import crud
 from fastapi import FastAPI
 from app.routers import sessions
+import re
 
 app = FastAPI(title="Pearl GenAI")
 
@@ -45,6 +46,8 @@ def startRouter(state: ChatStateMain) -> Literal['classifierNode', 'pdfSummarize
     imageUrl = state.get("imageURL")
     pdfUrl = state.get("pdfURL")
     if imageUrl:
+        return "classifierNode"
+    elif "heart" in state.get("messages", [])[-1].content.lower():
         return "classifierNode"
     elif pdfUrl:
         return "pdfSummarizerNode"
@@ -134,6 +137,45 @@ def WoundNode(state: ChatStateMain) -> ChatStateMain:
 
     return {"prediction": result.get("prediction"), "imageURL": public_url}
 
+def HeartNode(state: ChatStateMain) -> ChatStateMain:
+    import re
+    import requests
+
+    messages = state.get("messages", [])
+    last_message = messages[-1].content if messages else ""
+
+    features = state.get("features")
+    
+    if not features:
+        try:
+            nums = re.findall(r"[-+]?\d*\.\d+|\d+", last_message)
+            features = [float(x) for x in nums[:5]]
+        except Exception:
+            raise ValueError(
+                "HeartNode requires 'features' in state or numeric message with 5 values. "
+                "Expected: [MAXHR, ChestPainType (0–2), Cholesterol, Oldpeak, ST_Slope]."
+            )
+
+    if len(features) != 5:
+        raise ValueError(
+            "HeartNode requires exactly 5 numeric features. "
+            "Expected: [MAXHR, ChestPainType (0–2), Cholesterol, Oldpeak, ST_Slope]."
+        )
+
+    destination_url = "http://127.0.0.1:5000/predict"
+    response = requests.post(destination_url, json={"features": features})
+    response.raise_for_status()
+    result = response.json()
+    prediction = result.get("prediction")
+
+    if prediction == 0:
+        interpretation = "According to your features, your heart seems healthy."
+    elif prediction == 1:
+        interpretation = "There may be a risk of heart disease based on your features. Consult a cardiologist."
+    else:
+        interpretation = "Model returned an unexpected result. Please check your input."
+
+    return {"prediction": interpretation}
 
 def pdfSummarizerNode(state: ChatStateMain) -> ChatStateMain:
     return state
@@ -206,7 +248,7 @@ builder.add_node("pdfSummarizerNode", pdfSummarizerNode)
 builder.add_node("xrayClassifierNode", xrayClassifierNode)
 builder.add_node("BrainXRayNode", BrainXrayNode)
 builder.add_node("ChestXRayNode", ChestXRayNode)
-builder.add_node("HeartNode", lambda s: s)
+builder.add_node("HeartNode", HeartNode)
 builder.add_node("WoundNode", WoundNode)
 builder.add_node("BrainXRayReportNode", BrainXrayReportNode)
 
