@@ -1,62 +1,166 @@
-import { Home, MessageCircle, Upload, History, BookOpen, Phone, Moon, Sun, HelpCircle } from "lucide-react";
-import {Button2} from "../ui/ButtonChatBox"
-import { cn } from "@/lib/utils";
-import { useState } from "react";
+"use client"
 
-interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Menu, Plus, User, Settings, X, MessageSquare, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/Button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+interface ChatItem {
+  id: string
+  title: string
+  createdAt: string
 }
 
-const navigationItems = [
-  { icon: Home, label: "Home", href: "/", active: true },
-  { icon: MessageCircle, label: "Consult a Doctor", href: "/consult" },
-  { icon: History, label: "Chat History", href: "/history" },
-];
+export function Sidebar() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [chats, setChats] = useState<ChatItem[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const pathname = usePathname()
 
-export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
-  const [darkMode, setDarkMode] = useState(false);
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch("http://127.0.0.1:8000/sessions/")
+        const data = await response.json()
+        setChats(data.chats || [])
+      } catch (error) {
+        console.error("Error fetching chats:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchChats()
+  }, [])
+
+  useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
+
+  const isActive = (href: string) => pathname === href
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
-          onClick={onClose}
-        />
-      )}
-      
-      {/* Sidebar */}
-      <aside className={cn(
-        "fixed left-0 top-0 h-full w-72 glass-panel transform transition-transform duration-300 ease-in-out z-50",
-        "md:translate-x-0 md:static md:z-auto",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="p-6 h-full flex flex-col">
-          {/* Navigation */}
-          <nav className="space-y-2 flex-1">
-            <h2 className="text-sm font-semibold text-muted-foreground mb-4 px-3">
-              Navigation
-            </h2>
-            
-            {navigationItems.map((item) => (
-              <Button2
-                key={item.label}
-                variant={item.active ? "medical" : "ghost"}
-                className="w-full justify-start glass hover:glass"
-                onClick={onClose}
-              >
-                <item.icon className="mr-3 h-4 w-4" />
-                {item.label}
-              </Button2>
-            ))}
-          </nav>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-200 md:hidden transition-colors"
+        aria-label="Toggle sidebar"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
 
-          {/* Emergency Section */}
-          
+      {/* Sidebar */}
+      <aside
+        className={`fixed left-0 top-0 h-screen w-64 bg-neutral-950 border-r border-neutral-800 text-neutral-200 transition-transform duration-300 z-40 flex flex-col ${
+          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        {/* Logo Section */}
+        <div className="p-4 ">
+          <h1 className="text-2xl font-bold text-indigo-500">JIVIKA</h1>
+          <p className="text-xs text-neutral-400">Doctor AI Assistant</p>
+        </div>
+
+        {/* New Chat Button */}
+        <div className="p-4 border-b border-neutral-800">
+          <Link href="/chat" className="w-full">
+            <Button
+              variant="default"
+              className="w-full justify-start gap-3 bg-indigo-600 hover:bg-indigo-500 text-white"
+            >
+              <Plus size={20} />
+              New Chat
+            </Button>
+          </Link>
+        </div>
+
+        {/* Chat History */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-4 py-3">
+            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+              Chat History
+            </p>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="px-2 space-y-1">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="animate-spin text-neutral-400" size={20} />
+                </div>
+              ) : chats.length === 0 ? (
+                <p className="text-xs text-neutral-500 px-2 py-4 text-center">
+                  No chats yet
+                </p>
+              ) : (
+                chats.map((chat) => (
+                  <Link key={chat.id} href={`/chat/${chat.id}`}>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
+                        isActive(`/chat/${chat.id}`)
+                          ? "bg-indigo-600 text-white"
+                          : "text-neutral-200 hover:bg-neutral-800"
+                      }`}
+                      title={chat.title}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare
+                          size={16}
+                          className="flex-shrink-0 text-indigo-400"
+                        />
+                        <span className="truncate">{chat.title}</span>
+                      </div>
+                    </button>
+                  </Link>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="p-4 border-t border-neutral-800 space-y-2">
+          <Link href="/profile" className="w-full">
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 ${
+                isActive("/profile")
+                  ? "bg-neutral-800 text-indigo-400"
+                  : "text-neutral-300 hover:bg-neutral-800"
+              }`}
+            >
+              <User size={20} />
+              Profile
+            </Button>
+          </Link>
+
+          <Link href="/settings" className="w-full">
+            <Button
+              variant="ghost"
+              className={`w-full justify-start gap-3 ${
+                isActive("/settings")
+                  ? "bg-neutral-800 text-indigo-400"
+                  : "text-neutral-300 hover:bg-neutral-800"
+              }`}
+            >
+              <Settings size={20} />
+              Settings
+            </Button>
+          </Link>
         </div>
       </aside>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
     </>
-  );
-};
+  )
+}
