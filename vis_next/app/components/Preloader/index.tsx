@@ -77,7 +77,7 @@ const Preloader = ({
                 ref={(element) => {
                   spans.current[i] = element; 
                 }}
-                className="font-semibold text-[25rem] text-secondary md:text-[6rem]"
+                className="font-semibold text-[25rem] text-foreground md:text-[6rem]"
               >
                 {t}
               </div>
@@ -88,7 +88,7 @@ const Preloader = ({
   
       <div 
         ref={secondOverlayRef}
-        className="bg-accent fixed h-screen w-screen z-9990 top-0 left-0 bottom-0 right-0"
+        className="bg-primary fixed h-screen w-screen z-9990 top-0 left-0 bottom-0 right-0"
       ></div>
     </>
   );
