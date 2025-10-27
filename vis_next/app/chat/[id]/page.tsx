@@ -24,6 +24,7 @@ export default function ChatDetailPage() {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Fetch chat messages
   useEffect(() => {
     const fetchChat = async () => {
       try {
@@ -39,6 +40,7 @@ export default function ChatDetailPage() {
     fetchChat()
   }, [chatId])
 
+  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
@@ -80,6 +82,17 @@ export default function ChatDetailPage() {
     }
   }
 
+  const handleFilesChange = (files: FileList | null) => setSelectedFiles(files)
+
+  const handleRemoveFile = (index: number) => {
+    if (!selectedFiles) return
+    const arr = Array.from(selectedFiles)
+    arr.splice(index, 1)
+    const dataTransfer = new DataTransfer()
+    arr.forEach((f) => dataTransfer.items.add(f))
+    setSelectedFiles(dataTransfer.files)
+  }
+
   if (isFetching) {
     return (
       <ChatLayout>
@@ -94,7 +107,7 @@ export default function ChatDetailPage() {
     <ChatLayout>
       <div className="flex flex-col h-full bg-background text-foreground">
         {/* Header */}
-        <div className=" p-4 md:p-6 shrink-0 bg-background backdrop-blur">
+        <div className="p-4 md:p-6 shrink-0 bg-background backdrop-blur">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/20 rounded-lg">
               <Stethoscope className="text-primary" size={24} />
@@ -125,7 +138,7 @@ export default function ChatDetailPage() {
                       : "bg-card border border-border text-card-foreground"
                   }`}
                 >
-                  <p className="text-sm md:text-base whitespace-pre-wrap wrap-break-word leading-relaxed">
+                  <p className="text-sm md:text-base whitespace-pre-wrap leading-relaxed">
                     {message.content}
                   </p>
                 </div>
@@ -143,69 +156,38 @@ export default function ChatDetailPage() {
         </div>
 
         {/* Input Area */}
-        <div className=" p-4 md:p-6 bg-background backdrop-blur shrink-0">
+        <div className="p-4 md:p-6 bg-background backdrop-blur shrink-0">
           <div className="max-w-4xl mx-auto flex flex-col gap-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-              placeholder="Ask JIVIKA anything..."
-              className="min-h-20 resize-none bg-card border border-border text-foreground placeholder:text-muted-foreground text-sm md:text-base"
-              disabled={isLoading}
-            />
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <label className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => {
-                      setSelectedFiles(e.target.files)
-                    }}
-                    multiple
-                  />
-                  Upload files
-                </label>
-
-                {selectedFiles && selectedFiles.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    {Array.from(selectedFiles).map((file, index) => (
-                      <div key={index} className="bg-card border border-border px-2 py-1 rounded">
-                        <span className="text-xs text-foreground mr-2">{file.name}</span>
-                        <button
-                          type="button"
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => {
-                            const arr = Array.from(selectedFiles)
-                            arr.splice(index, 1)
-                            const dataTransfer = new DataTransfer()
-                            arr.forEach((f) => dataTransfer.items.add(f))
-                            setSelectedFiles(dataTransfer.files)
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
+            <div className="flex">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
+                placeholder="Ask JIVIKA anything..."
+                className="min-h-20 resize-none"
+                disabled={isLoading}
+                selectedFiles={selectedFiles}
+                onFilesChange={handleFilesChange}
+                onRemoveFile={handleRemoveFile}
+              />
               <Button
                 onClick={handleSendMessage}
                 disabled={!input.trim() || isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-3 md:px-4 self-end rounded-lg"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground mb-5 ml-2 px-4 md:px-4 self-end"
                 size="icon"
               >
                 {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Press Shift + Enter for new line</p>
+
+            <p className="text-xs text-muted-foreground mt-1">
+              Press Shift + Enter for new line
+            </p>
           </div>
         </div>
       </div>
