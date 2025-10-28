@@ -1,62 +1,68 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
-from openai import OpenAI
-from uuid import UUID
+from app import models, api
+from app.api import schemas
+import uuid
 
-client = OpenAI()
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
 
-def create_session(db: Session, user_email: str, session: schemas.SessionCreate):
-    user = db.query(models.User).filter(models.User.email == user_email).first()
+def get_or_create_user(db: Session, email: str):
+    user = get_user_by_email(db, email)
     if not user:
-        raise ValueError("User not found")
+        user = models.User(email=email)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
 
+def create_session(db: Session, user_id: uuid.UUID, session_in: schemas.SessionCreate):
     db_session = models.Session(
-        title=session.title,
-        user_id=user.id
+        user_id=user_id,
+        title=session_in.title
     )
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
     return db_session
 
-def get_sessions(db: Session, user_id: UUID):
+def get_user_sessions(db: Session, user_id: uuid.UUID):
     return db.query(models.Session).filter(models.Session.user_id == user_id).all()
 
-def get_session(db: Session, session_id: UUID):
+def get_session(db: Session, session_id: uuid.UUID):
     return db.query(models.Session).filter(models.Session.id == session_id).first()
 
-def add_message(db: Session, session_id: UUID, message: schemas.MessageCreate, user_email: str):
-    user = db.query(models.User).filter(models.User.email == user_email).first()
-    if not user:
-        raise ValueError("User not found")
+def check_session_owner(db: Session, session_id: uuid.UUID, user_id: uuid.UUID):
+    session = db.query(models.Session).filter(
+        models.Session.id == session_id,
+        models.Session.user_id == user_id
+    ).first()
+    return session is not None
 
-    vector = None
-    if message.content:
-        embedding_response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=message.content
-        )
-        vector = embedding_response.data[0].embedding
-
+def add_message(db: Session, session_id: uuid.UUID, message_in: schemas.MessageCreate):
     db_message = models.Message(
         session_id=session_id,
-        sender=user_email,
-        role=message.role,
-        content=message.content,
-        image_url=message.image_url,
-        pdf_url=message.pdf_url,
-        prediction=message.prediction,
-        embedding=vector
+        role=message_in.role,
+        content=message_in.content
     )
     db.add(db_message)
     db.commit()
     db.refresh(db_message)
     return db_message
 
-def get_messages(db: Session, session_id: UUID):
-    return db.query(models.Message).filter(models.Message.session_id == session_id).all()
-
-def get_user_by_email(db: Session, email: str):
-    if not isinstance(email, str):
-        raise ValueError("Email must be a string")
-    return db.query(models.User).filter(models.User.email == email).first()
+def get_session_messages(db: Session, session_id: uuid.UUID):
+    """
+    Gets all messages for a specific session, ordered by creation time.
+    """
+    return db.query(models.Message)\
+             .filter(models.Message.session_id == session_id)\
+             .order_by(models.Message.created_at.asc())\
+             .all()
+             
+def update_session_title(db: Session, session_id: uuid.UUID, title: str):
+    db_session = get_session(db, session_id=session_id)
+    if db_session:
+        db_session.title = title
+        db.add(db_session)
+        db.commit()
+        db.refresh(db_session)
+    return db_session
