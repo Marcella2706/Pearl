@@ -26,7 +26,7 @@ export default function AuthPage() {
   const { currentUser, googleAuth, generateOTP, sendOTP, changePassword, signUp, signIn } = useUser();
   useEffect(() => {
     if (currentUser) {
-      redirect("/flow");
+      redirect("/chat");
     }
   }, [currentUser]);
   async function waitForOtpVerification(checkInterval = 100, timeout = 30000) {
@@ -50,6 +50,7 @@ export default function AuthPage() {
     if (isForgotPassword) {
       const email = data.email;
       const password = data.password;
+      if(password!=data.confirmPassword) throw new Error(`The passwords don't match`);
       setIsOtpPage(true);
 
       const response = await sendOTP(email as string);
@@ -64,7 +65,7 @@ export default function AuthPage() {
 
       localStorage.removeItem("currentOtp");
       reset();
-      redirect("/flow");
+      redirect("/chat");
     }
 
     if (isSignUp) {
@@ -89,17 +90,21 @@ export default function AuthPage() {
 
       localStorage.removeItem("currentOtp");
 
-      signUp(email as string, password as string, name as string)
-      redirect("/flow");
+      await signUp(email as string, password as string, name as string)
+      redirect("/chat");
     }
 
     else {
       const email = data.email;
       const password = data.password;
-      signIn(email as string, password as string)
+      const success = await signIn(email as string, password as string);
+      if (success) {
+        redirect("/chat");
+      } else {
+        console.error("Sign-in failed. No redirect.");
+  }
     }
     reset();
-    redirect("/flow");
   };
 
   const googlelogin = useGoogleLogin({
@@ -108,7 +113,7 @@ export default function AuthPage() {
       const token = await googleAuth(cred.access_token);
       localStorage.setItem('__Pearl_Token', token);
       localStorage.setItem('__Google_Access_Token__', cred.access_token);
-      redirect("/flow");
+      redirect("/chat");
     },
     onError: () => console.log("Login Failed"),
     scope: "openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send",
