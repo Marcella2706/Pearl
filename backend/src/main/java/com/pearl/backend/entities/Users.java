@@ -36,6 +36,9 @@ public class Users implements UserDetails {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "profilePic")
+    private String profilePhoto;
+
     @Column(name = "is_active")
     private boolean isActive = true;
 
