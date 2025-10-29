@@ -19,7 +19,7 @@ interface UserContextType {
   sendOTP: (email: string) => Promise<string>;
   changePassword: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<Boolean>;
   logout: () => void;
 }
 
@@ -32,7 +32,7 @@ const UserContext = createContext<UserContextType>({
   sendOTP: async () => Promise.resolve(""),
   changePassword: async () => Promise.resolve(),
   signUp: async () => Promise.resolve(),
-  signIn: async () => Promise.resolve(),
+  signIn: async () => Promise.resolve(false),
   logout: () => {
     localStorage.removeItem('__Pearl_Token');
     window.location.reload();
@@ -109,21 +109,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }
 
-  async function signIn(email: string, password: string) {
-    const response = await axios.post(`http://localhost:2706/api/v1/auth/signin`, {
-      email,
-      password
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const responseData = await response.data;
-    if (responseData.token) {
-      localStorage.setItem('__Pearl_Token', responseData.token);
+  async function signIn(email: string, password: string): Promise<boolean> {
+    try {
+      const response = await axios.post(`http://localhost:2706/api/v1/auth/signin`, {
+        email,
+        password,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+  
+      const responseData = response.data; 
+      if (responseData.token) {
+        localStorage.setItem('__Pearl_Token', responseData.token);
+        return true; 
+      }
+      return false;
+    } catch (error) {
+      return false;
     }
   }
+  
 
   async function changePassword(email: string, newPassword: string) {
     const token = localStorage.getItem("currentOtp");
@@ -132,7 +137,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const response = await axios.post(
-      `http:localhost:2706/api/v1/auth/reset-password`,
+      `http://localhost:2706/api/v1/auth/reset-password`,
       {
         email,
         newPassword,

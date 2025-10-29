@@ -50,6 +50,7 @@ export default function AuthPage() {
     if (isForgotPassword) {
       const email = data.email;
       const password = data.password;
+      if(password!=data.confirmPassword) throw new Error(`The passwords don't match`);
       setIsOtpPage(true);
 
       const response = await sendOTP(email as string);
@@ -89,17 +90,22 @@ export default function AuthPage() {
 
       localStorage.removeItem("currentOtp");
 
-      signUp(email as string, password as string, name as string)
+
+      await signUp(email as string, password as string, name as string)
       redirect("/chat");
     }
 
     else {
       const email = data.email;
       const password = data.password;
-      signIn(email as string, password as string)
+      const success = await signIn(email as string, password as string);
+      if (success) {
+        redirect("/chat");
+      } else {
+        console.error("Sign-in failed. No redirect.");
+  }
     }
     reset();
-    redirect("/chat");
   };
 
   const googlelogin = useGoogleLogin({
