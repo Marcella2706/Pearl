@@ -51,9 +51,9 @@ model.eval()
 
 
 class_names = [
-    "lung",
     "wound",
-    "brain"
+    "brain",
+    "lung"
 ]
 
 # @app.route("/")
