@@ -17,6 +17,7 @@ const handleOTPComplete = async (otp: string) => {
  try {
    if (otp === currentOtp) {
      localStorage.setItem('otpVerified','true')
+     redirect('/chat')
    } else {
      setError("Invalid OTP. Please try again.")
    }
