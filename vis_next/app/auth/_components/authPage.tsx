@@ -26,7 +26,7 @@ export default function AuthPage() {
   const { currentUser, googleAuth, generateOTP, sendOTP, changePassword, signUp, signIn } = useUser();
   useEffect(() => {
     if (currentUser) {
-      redirect("/flow");
+      redirect("/chat");
     }
   }, [currentUser]);
   async function waitForOtpVerification(checkInterval = 100, timeout = 30000) {
@@ -64,7 +64,7 @@ export default function AuthPage() {
 
       localStorage.removeItem("currentOtp");
       reset();
-      redirect("/flow");
+      redirect("/chat");
     }
 
     if (isSignUp) {
@@ -90,7 +90,7 @@ export default function AuthPage() {
       localStorage.removeItem("currentOtp");
 
       signUp(email as string, password as string, name as string)
-      redirect("/flow");
+      redirect("/chat");
     }
 
     else {
@@ -99,7 +99,7 @@ export default function AuthPage() {
       signIn(email as string, password as string)
     }
     reset();
-    redirect("/flow");
+    redirect("/chat");
   };
 
   const googlelogin = useGoogleLogin({
@@ -108,7 +108,7 @@ export default function AuthPage() {
       const token = await googleAuth(cred.access_token);
       localStorage.setItem('__Pearl_Token', token);
       localStorage.setItem('__Google_Access_Token__', cred.access_token);
-      redirect("/flow");
+      redirect("/chat");
     },
     onError: () => console.log("Login Failed"),
     scope: "openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send",

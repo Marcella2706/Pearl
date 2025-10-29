@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import axios from "axios"
 
 interface ChatItem {
   id: string
@@ -34,9 +35,36 @@ export function Sidebar({ isMobile }: SidebarProps) {
     const fetchChats = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch("http://127.0.0.1:8000/sessions/")
-        const data = await response.json()
-        setChats(data.chats || [])
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("__Pearl_Token")
+            : null
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+          }
+        )
+
+        const data = response.data
+
+        // Normalize response shape:
+        // - some endpoints return an array of sessions
+        // - others may return { chats: [...] }
+        const sessions = Array.isArray(data) ? data : data?.chats || []
+
+        const normalized: ChatItem[] = sessions.map((s: any) => ({
+          id: s.id,
+          title: s.title || "Untitled",
+          // convert snake_case created_at to createdAt if present
+          createdAt: s.created_at ?? s.createdAt ?? "",
+        }))
+
+        setChats(normalized)
       } catch (error) {
         console.error("Error fetching chats:", error)
       } finally {
@@ -52,11 +80,27 @@ export function Sidebar({ isMobile }: SidebarProps) {
 
   const isActive = (href: string) => pathname === href
 
-  // Mobile Overlay Sidebar
+  const handleNewChat = () => { 
+    let response=axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`,
+    {},
+    {
+      headers: {
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+      },
+    }
+    ).then((res)=>{
+      const data=res.data;
+      if(data.id){
+        window.location.href=`/chat/${data.id}`;
+      }
+    }).catch((error)=>{
+      console.error("Error creating new chat:",error);
+    });
+  }
   if (isMobile) {
     return (
       <>
-        {/* Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-card hover:bg-accent text-foreground transition-colors"
@@ -65,7 +109,6 @@ export function Sidebar({ isMobile }: SidebarProps) {
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
 
-        {/* Slide-in Sidebar */}
         <aside
           className={`fixed left-0 top-0 h-screen w-64 bg-sidebar border-r border-sidebar-border text-sidebar-foreground transform transition-transform duration-300 z-40 flex flex-col ${
             isOpen ? "translate-x-0" : "-translate-x-full"
@@ -173,7 +216,8 @@ export function Sidebar({ isMobile }: SidebarProps) {
         <Link href="/chat" className="w-full">
           <Button
             variant="default"
-            className="w-full justify-start gap-3 bg-background hover:bg-sidebar-primary/90 text-foreground"
+            className="w-full justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground"
+            onClick={handleNewChat}
           >
             <Plus size={20} />
             New Chat
@@ -203,7 +247,7 @@ export function Sidebar({ isMobile }: SidebarProps) {
                   <button
                     className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
                       isActive(`/chat/${chat.id}`)
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        ? "bg-sidebar-accent text-sidebar-primary"
                         : "text-sidebar-foreground hover:bg-sidebar-accent"
                     }`}
                   >

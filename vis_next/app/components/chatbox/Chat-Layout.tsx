@@ -8,7 +8,6 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
   const [isResizing, setIsResizing] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Detect mobile view
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -17,7 +16,7 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
   }, [])
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMobile) return // disable drag on mobile
+    if (isMobile) return
     e.preventDefault()
     setIsResizing(true)
   }
@@ -46,16 +45,16 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      {/* Sidebar */}
+
       <div
         style={{
           width: isMobile ? "0px" : `${sidebarWidth}px`,
         }}
-        className="relative flex-shrink-0 border-r border-border bg-background hidden md:block"
+        className="relative shrink-0 border-r border-border bg-background hidden md:block"
       >
         <Sidebar isMobile={false} />
 
-        {/* Drag Handle (desktop only) */}
+    
         {!isMobile && (
           <div
             onMouseDown={handleMouseDown}
@@ -64,10 +63,8 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
         )}
       </div>
 
-      {/* Mobile Sidebar (overlay style) */}
       {isMobile && <Sidebar isMobile={true} />}
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-background">
         {children}
       </main>

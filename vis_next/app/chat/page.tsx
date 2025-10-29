@@ -6,7 +6,7 @@ import { ChatLayout } from "../components/chatbox/Chat-Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Stethoscope, Loader2 } from "lucide-react";
-
+import axios from "axios";
 const SUGGESTIONS = [
   "What are symptoms of flu?",
   "How to manage stress?",
@@ -26,13 +26,31 @@ export default function ChatPage() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/chats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ initialMessage: message }),
-      });
-      const data = await response.json();
-      if (data.chatId) router.push(`/chat/${data.chatId}`);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`, 
+      {},
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+        },
+      }
+      );
+      const data = await response.data;
+      if (data.id) {
+        const messageResponse = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${data.id}/chat`, 
+        {
+          content: message,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+          },
+        }
+        );
+        const messageData = await messageResponse.data;
+        router.push(`/chat/${data.chatId}`);
+      }
     } catch (error) {
       console.error("Error creating chat:", error);
     } finally {
