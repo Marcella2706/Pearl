@@ -1,6 +1,6 @@
-DB_URL=jdbc:postgresql://aws-1-ap-south-1.pooler.supabase.com:6543/postgres?user=postgres.quemwxexvyagfljguztb&password=Password123
-DB_USERNAME=postgres.quemwxexvyagfljguztb
-DB_PASSWORD=Password123
+DB_URL=jdbc:postgresql://localhost:5432/postgres
+DB_USERNAME=postgres
+DB_PASSWORD=password
 
 GOOGLE_CLIENT_ID=27965506807-10jk3g8tv4ouuvvc8ri1irvlqtmf8ics.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=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

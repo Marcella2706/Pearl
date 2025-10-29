@@ -19,7 +19,6 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
 
-  // Determine message type
   const hasImage = message.imageUrl && message.imageUrl.trim() !== '';
   const hasText = message.content && message.content.trim() !== '';
   
@@ -37,8 +36,8 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   const getMessageIcon = () => {
     if (isAssistant) {
       return actualMessageType === "image" || actualMessageType === "text_with_image" 
-        ? <ImageIcon className="w-4 h-4 text-accent" />
-        : <Bot className="w-4 h-4 text-accent" />;
+        ? <ImageIcon className="w-4 h-4 text-foreground" />
+        : <Bot className="w-4 h-4 text-foreground" />;
     } else {
       return actualMessageType === "image" || actualMessageType === "text_with_image"
         ? <ImageIcon className="w-4 h-4 text-foreground" />
@@ -48,8 +47,8 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   const getAvatarBgColor = () => {
     if (isAssistant) {
       return actualMessageType === "image" || actualMessageType === "text_with_image"
-        ? "bg-accent/20"
-        : "bg-accent/10";
+        ? "bg-foreground/20"
+        : "bg-foreground/10";
     } else {
       return "bg-foreground/10";
     }
@@ -57,7 +56,6 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
 
   return (
     <div className={`flex gap-3 ${isUser ? "justify-end" : "justify-start"}`}>
-      {/* AI Avatar - Show on left for AI messages */}
       {isAssistant && (
         <div className={`shrink-0 w-8 h-8 rounded-full ${getAvatarBgColor()} flex items-center justify-center`}>
           {getMessageIcon()}
@@ -82,7 +80,6 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
           </div>
         ) : (
           <div className="space-y-2">
-            {/* Image content */}
             {hasImage && (
               <div className="rounded-lg overflow-hidden">
                 <img
@@ -97,8 +94,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
                 />
               </div>
             )}
-            
-            {/* Text content */}
+          
             {hasText && (
               <p className="text-sm md:text-base whitespace-pre-wrap leading-relaxed">
                 {message.content}

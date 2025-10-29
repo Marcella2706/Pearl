@@ -1,7 +1,6 @@
 'use client';
 import MaskText from '@/app/components/Common/MaskText';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import Image from 'next/image';
 import {
   desktopHeaderPhrases,
   desktopParagraphPhrase,
@@ -14,7 +13,6 @@ const OffersSection = () => {
   return (
     <section className="py-20 md:py-12 mt-40">
       <div className="max-w-[1440px] w-[90%] mx-auto">
-        {/* Header */}
         <header className="flex flex-col items-center gap-6 text-center max-w-4xl mx-auto mb-28 md:mb-16">
           <MaskText
             phrases={desktopHeaderPhrases}
@@ -37,10 +35,8 @@ const OffersSection = () => {
           )}
         </header>
 
-        {/* First Row - 3-column grid (mobile: 1 col, md+: 3 cols).
-            Card spans apply on md+ only. */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 md:gap-8">
-          {/* First Card - spans 2 columns on md+ */}
+
           <div
             className="col-span-1 md:col-span-2 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
@@ -64,7 +60,6 @@ const OffersSection = () => {
             </div>
           </div>
 
-          {/* Second Card - spans 1 column on md+ */}
           <div
             className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{
@@ -89,9 +84,9 @@ const OffersSection = () => {
           </div>
         </div>
 
-        {/* Second Row - same grid rules: first card 1 col, second card spans 2 cols */}
+ 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8">
-          {/* Third Card - single column on md+ */}
+
           <div
             className="col-span-1 md:col-span-1 overflow-hidden h-[500px] md:h-[450px] rounded-3xl border border-border bg-background-forground flex flex-col relative"
             style={{

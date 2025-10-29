@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Stethoscope, Loader2 } from "lucide-react";
 import axios from "axios";
+import { getAuthToken } from "@/lib/auth-utils";
+import { Kbd } from "@/components/ui/kbd";
 const SUGGESTIONS = [
   "What are symptoms of flu?",
   "How to manage stress?",
@@ -31,7 +33,7 @@ export default function ChatPage() {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+          'Authorization': `Bearer ${getAuthToken()}`,
         },
       }
       );
@@ -44,7 +46,7 @@ export default function ChatPage() {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+            'Authorization': `Bearer ${getAuthToken()}`,
           },
         }
         );
@@ -102,7 +104,6 @@ export default function ChatPage() {
   return (
     <ChatLayout>
       <div className="flex flex-col h-full bg-background">
-        {/* Header */}
         <div className="p-4 md:p-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/20 rounded-lg">
@@ -118,8 +119,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-
-        {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
           <div className="w-full max-w-2xl space-y-8">
             <div className="text-center space-y-2">
@@ -131,7 +130,6 @@ export default function ChatPage() {
               </p>
             </div>
 
-            {/* Suggestions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {SUGGESTIONS.map((s, i) => (
                 <button
@@ -147,8 +145,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-
-        {/* Input Area */}
         <div className=" p-4 md:p-6 bg-background shrink-0">
           <div className="max-w-2xl mx-auto flex flex-col gap-2">
             <div className="flex">
@@ -207,7 +203,7 @@ export default function ChatPage() {
             </div> */}
 
             <p className="text-xs text-muted-foreground mt-1">
-              Press Shift + Enter for new line
+              Press <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd> for new line
             </p>
           </div>
         </div>

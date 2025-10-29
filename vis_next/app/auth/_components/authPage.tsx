@@ -9,11 +9,17 @@ import { UserIcon, MailIcon, LockIcon } from "lucide-react";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useTheme } from "@/app/context/ThemeContext"
+import { useTheme } from "@/app/context/ThemeContext";
+import { useSearchParams, useRouter } from "next/navigation";
+import { setAuthToken } from "@/lib/auth-utils";
 import OTPEntryPage from "./optpage";
 export default function AuthPage() {
   const { theme, setTheme } = useTheme();
   const [isSignUp, setIsSignUp] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const redirectPath = searchParams.get('redirect') || '/chat';
+  
   const {
     register,
     handleSubmit,
@@ -24,22 +30,42 @@ export default function AuthPage() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isOtpPage, setIsOtpPage] = useState(false);
   const { currentUser, googleAuth, generateOTP, sendOTP, changePassword, signUp, signIn } = useUser();
+  
   useEffect(() => {
     if (currentUser) {
-      redirect("/chat");
+      router.push(redirectPath);
     }
-  }, [currentUser]);
-  async function waitForOtpVerification(checkInterval = 100, timeout = 30000) {
+  }, [currentUser, router, redirectPath]);
+  async function waitForOtpVerification(checkInterval = 100, timeout = 30000): Promise<boolean> {
     return new Promise((resolve, reject) => {
+
+      const isVerified = () => {
+        const val = localStorage.getItem("otpVerified");
+        if (!val) return false;
+        if (val === "true" || val === "1") return true;
+        try {
+          const parsed = JSON.parse(val);
+          return parsed === true;
+        } catch {
+          return false;
+        }
+      };
+      if (isVerified()) {
+        localStorage.removeItem("otpVerified");
+        resolve(true);
+        return;
+      }
       const interval = setInterval(() => {
-        if (localStorage.getItem("otpVerified") === "true") {
+        if (isVerified()) {
           clearInterval(interval);
-          resolve(true);
+          if (timeoutId !== undefined) clearTimeout(timeoutId);
           localStorage.removeItem("otpVerified");
+          resolve(true);
         }
       }, checkInterval);
 
-      setTimeout(() => {
+      let timeoutId: number | undefined = undefined;
+      timeoutId = window.setTimeout(() => {
         clearInterval(interval);
         reject(new Error("OTP verification timed out"));
       }, timeout);
@@ -65,7 +91,7 @@ export default function AuthPage() {
 
       localStorage.removeItem("currentOtp");
       reset();
-      redirect("/chat");
+      redirect("/");
     }
 
     if (isSignUp) {
@@ -92,7 +118,7 @@ export default function AuthPage() {
 
 
       await signUp(email as string, password as string, name as string)
-      redirect("/chat");
+      router.push(redirectPath);
     }
 
     else {
@@ -100,7 +126,7 @@ export default function AuthPage() {
       const password = data.password;
       const success = await signIn(email as string, password as string);
       if (success) {
-        redirect("/chat");
+        router.push(redirectPath);
       } else {
         console.error("Sign-in failed. No redirect.");
   }
@@ -112,9 +138,9 @@ export default function AuthPage() {
     onSuccess: async (cred: TokenResponse) => {
       console.log(cred);
       const token = await googleAuth(cred.access_token);
-      localStorage.setItem('__Pearl_Token', token);
+      setAuthToken(token);
       localStorage.setItem('__Google_Access_Token__', cred.access_token);
-      redirect("/chat");
+      router.push(redirectPath);
     },
     onError: () => console.log("Login Failed"),
     scope: "openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send",

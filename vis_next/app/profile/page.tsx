@@ -1,32 +1,26 @@
 "use client"
-
-<<<<<<< HEAD
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { User, Mail, Calendar } from "lucide-react"
-import { ChatLayout } from "../components/chatbox/Chat-Layout"
-import ThemeSwitcher from "../components/Common/ThemeSwitcher"
-
-export default function ProfilePage() {
-=======
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Calendar } from "lucide-react"
+import { User, Mail, Calendar, MapPin, Car  } from "lucide-react"
 import { ChatLayout } from "../components/chatbox/Chat-Layout"
 import ThemeSwitcher from "../components/Common/ThemeSwitcher"
 import { EditProfileModal } from "./editProfile"
+import { getAuthToken } from "@/lib/auth-utils"
+import { MapDisplay } from "../explore/_components/maps"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [editOpen, setEditOpen] = useState(false)
 
+  const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null)
+
   useEffect(() => {
     const fetchUser = async () => {
       const res = await fetch(`http://localhost:2706/api/v1/user/current-user`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("__Pearl_Token")}`,
+          Authorization: `Bearer ${getAuthToken()}`,
         },
       })
       if (res.ok) {
@@ -40,6 +34,25 @@ export default function ProfilePage() {
     fetchUser()
   }, [])
 
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          })
+        },
+        (error) => {
+          console.error("Error getting location:", error)
+          setCurrentLocation({ lat: 40.7128, lng: -74.006 })
+        }
+      )
+    } else {
+      setCurrentLocation({ lat: 40.7128, lng: -74.006 })
+    }
+  }, [])
+
   const getInitials = (name: string) => {
     if (!name) return "U"
     return name
@@ -49,7 +62,8 @@ export default function ProfilePage() {
       .toUpperCase()
   }
 
->>>>>>> 8dc21d1fcc0310fe4efb6615ab33b1fcbf87d8b5
+
+
   return (
     <ChatLayout>
       <div className="flex flex-col h-full bg-background">
@@ -63,93 +77,97 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-2xl space-y-6">
-            <Card className="bg-card border-border p-6">
-<<<<<<< HEAD
-              <h2 className="text-lg md:text-xl font-semibold text-foreground mb-6">User Information</h2>
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <User className="text-primary" size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <label className="text-xs md:text-sm text-muted-foreground uppercase tracking-wide">Name</label>
-                    <p className="text-foreground font-medium text-sm md:text-base mt-1">User</p>
-                  </div>
+          <div className="max-w-4xl mx-auto space-y-8">
+            <Card className="bg-card border-border p-8 rounded-3xl shadow-2xl">
+              <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
+                <div className="shrink-0">
+                  <Avatar className="h-32 w-32 border-4 border-border rounded-2xl shadow-lg">
+                    <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-2xl rounded-2xl">
+                      {getInitials(user?.name)}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
-=======
-              <div className="flex items-center gap-6 mb-6">
-                <Avatar className="h-20 w-20 border border-border">
-                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                    {getInitials(user?.name)}
-                  </AvatarFallback>
-                </Avatar>
 
-                <div>
-                  <h2 className="text-lg md:text-xl font-semibold text-foreground">{user?.name || "Unnamed User"}</h2>
-                  <p className="text-sm text-muted-foreground">{user?.email || "No email"}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <h1 className="text-3xl font-bold text-foreground truncate">
+                      {user?.name || "Unnamed User"}
+                    </h1>
+                  </div>
+                  
+                  <h3 className="text-lg font-medium text-muted-foreground mb-4">
+                    Patient
+                  </h3>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                        <Mail className="text-primary" size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <label className="text-xs text-muted-foreground uppercase tracking-wide">Email</label>
+                        <p className="text-foreground font-medium text-base break-all">
+                          {user?.email || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                        <Calendar className="text-primary" size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <label className="text-xs text-muted-foreground uppercase tracking-wide">
+                          Member Since
+                        </label>
+                        <p className="text-foreground font-medium text-base">
+                          {new Date().toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <Button
+                      className="bg-primary hover:bg-primary/90 text-background font-semibold rounded-full px-10 py-3 shadow-lg"
+                      onClick={() => setEditOpen(true)}
+                    >
+                      Edit Profile
+                    </Button>
+                    
+                    <div className="flex items-center space-x-8">
+
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-foreground mb-2">Your Location</h2>
+                <p className="text-base text-muted-foreground">Current location for healthcare services</p>
+              </div>
+              
+    
+              <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden shadow-inner flex items-center justify-center border border-border mb-6">
+                {currentLocation ? (
+                 <div className="w-full h-full">
+                    <MapDisplay></MapDisplay>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <MapPin size={40} className="text-primary mb-2" />
+                    <span className="text-muted-foreground">Loading location...</span>
+                  </div>
+                )}
+              </div>
 
-              <div className="space-y-4">
->>>>>>> 8dc21d1fcc0310fe4efb6615ab33b1fcbf87d8b5
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Mail className="text-primary" size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <label className="text-xs md:text-sm text-muted-foreground uppercase tracking-wide">Email</label>
-<<<<<<< HEAD
-                    <p className="text-foreground font-medium text-sm md:text-base mt-1 break-all">user@example.com</p>
-=======
-                    <p className="text-foreground font-medium text-sm md:text-base mt-1 break-all">
-                      {user?.email || "—"}
-                    </p>
->>>>>>> 8dc21d1fcc0310fe4efb6615ab33b1fcbf87d8b5
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Calendar className="text-primary" size={20} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <label className="text-xs md:text-sm text-muted-foreground uppercase tracking-wide">
-                      Member Since
-                    </label>
-                    <p className="text-foreground font-medium text-sm md:text-base mt-1">
-                      {new Date().toLocaleDateString()}
-                    </p>
-                  </div>
+              <div className="flex items-center space-x-8">
+                
+                <div className="ml-auto">
+                  <ThemeSwitcher />
                 </div>
               </div>
             </Card>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-<<<<<<< HEAD
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1">Edit Profile</Button>
-              <Button variant="outline" className="flex-1 bg-transparent">
-                Change Password
-              </Button>
-            </div>
-
-            <ThemeSwitcher />
-
-          </div>
-        </div>
-      </div>
-    </ChatLayout>
-  )
-}
-=======
-              <Button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground flex-1"
-                onClick={() => setEditOpen(true)}
-              >
-                Edit Profile
-              </Button>
-              <ThemeSwitcher />
-            </div>
           </div>
         </div>
       </div>
@@ -163,4 +181,3 @@ export default function ProfilePage() {
     </ChatLayout>
   )
 }
->>>>>>> 8dc21d1fcc0310fe4efb6615ab33b1fcbf87d8b5

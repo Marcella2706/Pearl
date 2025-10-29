@@ -9,6 +9,8 @@ import { useParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
 import { uploadImageToS3, UploadResult } from "@/lib/aws" 
+import { Kbd } from "@/components/ui/kbd"
+import { getAuthToken } from "@/lib/auth-utils"
 
 interface StreamChunk {
   type: "message" | "prediction" | "error"
@@ -35,38 +37,36 @@ export default function ChatDetailPage() {
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    // const fetchChat = async () => {
-    //   if (!chatId) return
-    //   setIsFetching(true)
-    //   try {
+    const fetchChat = async () => {
+      if (!chatId) return
+      setIsFetching(true)
+      try {
 
-    //     const response = await axios.get(
-    //       `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/messages`,
-    //       {
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //           Authorization: `Bearer ${localStorage.getItem("__Pearl_Token")}`,
-    //         },
-    //       }
-    //     )
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/messages`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          }
+        )
         
-    //     const fetchedMessages: Message[] = response.data.map((msg: any) => ({
-    //       id: msg.id,
-    //       role: msg.role === "human" ? "user" : "assistant",
-    //       content: msg.content,
-    //       timestamp: new Date(msg.created_at), 
-    //     }))
+        const fetchedMessages: Message[] = response.data.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role === "human" ? "user" : "assistant",
+          content: msg.content,
+          timestamp: new Date(msg.created_at), 
+        }))
         
-    //     setMessages(fetchedMessages)
-    //   } catch (error) {
-    //     console.error("Error fetching chat:", error)
-    //   } finally {
-        // setIsFetching(false)
-    //   }
-    // }
-    // fetchChat()
+        setMessages(fetchedMessages)
+      } catch (error) {
+        console.error("Error fetching chat:", error)
+      } finally {
         setIsFetching(false)
-
+      }
+    }
+    fetchChat()
   }, [chatId])
 
   useEffect(() => {
@@ -76,17 +76,16 @@ export default function ChatDetailPage() {
   const handleSendMessage = async () => {
     if (!input.trim() && (!selectedFiles || selectedFiles.length === 0)) return
 
-    // Handle image upload if files are selected
     let imageUrl = "";
     if (selectedFiles && selectedFiles.length > 0) {
-      const file = selectedFiles[0]; // Take the first file for now
+      const file = selectedFiles[0]; 
       try {
         const uploadResult: UploadResult = await uploadImageToS3(file);
         if (uploadResult.success && uploadResult.url) {
           imageUrl = uploadResult.url;
         } else {
           console.error("Image upload failed:", uploadResult.error);
-          // You might want to show an error message to the user here
+         
           return;
         }
       } catch (error) {
@@ -95,13 +94,12 @@ export default function ChatDetailPage() {
       }
     }
 
-    // Determine message type
     let messageType: "text" | "image" | "text_with_image" = "text";
     if (imageUrl && input.trim()) {
       messageType = "text_with_image";
     } else if (imageUrl) {
       messageType = "image";
-    }
+    } 
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -114,7 +112,7 @@ export default function ChatDetailPage() {
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
-    setSelectedFiles(null) // Clear selected files
+    setSelectedFiles(null) 
     setIsLoading(true)
 
     const assistantId = (Date.now() + 1).toString()
@@ -123,114 +121,108 @@ export default function ChatDetailPage() {
       role: "assistant",
       content: "", 
       timestamp: new Date(),
-      isThinking: true, // Start with thinking state
+      isThinking: true, 
     }
     setMessages((prev) => [...prev, assistantMessage])
 
-    // try {
-    //   const requestBody: any = {
-    //     content: userMessage.content,
-    //   };
+    try {
+      const requestBody: any = {
+        content: userMessage.content,
+      };
 
-    //   // Include imageURL if present
-    //   if (imageUrl) {
-    //     requestBody.imageURL = imageUrl;
-    //   }
+      if (imageUrl) {
+        requestBody.imageURL = imageUrl;
+      }
 
-    //   const response = await fetch(
-    //     `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/chat`,
-    //     {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         Authorization: `Bearer ${localStorage.getItem("__Pearl_Token")}`,
-    //       },
-    //       body: JSON.stringify(requestBody),
-    //     }
-    //   )
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      )
 
-    //   if (!response.ok) {
-    //     throw new Error(`HTTP error! status: ${response.status}`)
-    //   }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
 
-    //   if (!response.body) {
-    //     throw new Error("No response body")
-    //   }
+      if (!response.body) {
+        throw new Error("No response body")
+      }
 
-    //   const reader = response.body.getReader()
-    //   const decoder = new TextDecoder()
-    //   let partialData = ""
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let partialData = ""
 
-    //   try {
-    //     while (true) {
-    //       const { done, value } = await reader.read()
-    //       if (done) {
-    //         break
-    //       }
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            break
+          }
 
-    //       partialData += decoder.decode(value, { stream: true })
-    //       const lines = partialData.split("\n")
-    //       partialData = lines.pop() || ""
+          partialData += decoder.decode(value, { stream: true })
+          const lines = partialData.split("\n")
+          partialData = lines.pop() || ""
 
-    //       for (const line of lines) {
-    //         if (!line.trim()) continue
+          for (const line of lines) {
+            if (!line.trim()) continue
             
-    //         try {
-    //           const chunk: StreamChunk = JSON.parse(line)
+            try {
+              const chunk: StreamChunk = JSON.parse(line)
               
-    //           if (chunk.type === "message" || chunk.type === "prediction") {
-    //             setMessages((prev) =>
-    //               prev.map((msg) =>
-    //                 msg.id === assistantId
-    //                   ? { ...msg, content: msg.content + chunk.content, isThinking: false }
-    //                   : msg
-    //               )
-    //             )
-    //           } else if (chunk.type === "error") {
-    //             // Log the error but don't break the stream
-    //             console.warn("Stream error received:", chunk.content)
-    //             // Only add error to message if it's a significant error
-    //             if (chunk.content !== "the connection is closed") {
-    //               setMessages((prev) =>
-    //                 prev.map((msg) =>
-    //                   msg.id === assistantId
-    //                     ? { ...msg, content: msg.content + `\n\n[ERROR: ${chunk.content}]`, isThinking: false }
-    //                     : msg
-    //                 )
-    //               )
-    //             }
-    //           }
-    //         } catch (e) {
-    //           console.error("Error parsing stream chunk:", line, e)
-    //           // Continue processing other chunks
-    //         }
-    //       }
-    //     }
-    //   } catch (readerError) {
-    //     console.error("Stream reading error:", readerError)
-    //     // Don't throw here, let the finally block handle cleanup
-    //   } finally {
-    //     // Ensure thinking state is cleared
-    //     setMessages((prev) =>
-    //       prev.map((msg) =>
-    //         msg.id === assistantId && msg.isThinking
-    //           ? { ...msg, isThinking: false }
-    //           : msg
-    //       )
-    //     )
-    //   }
-    // } catch (error) {
-    //   console.error("Error sending message:", error)
-    //   setMessages((prev) =>
-    //     prev.map((msg) =>
-    //       msg.id === assistantId
-    //         ? { ...msg, content: "Sorry, an error occurred. Please try again.", isThinking: false }
-    //         : msg
-    //     )
-    //   )
-    // } finally {
-    //   setIsLoading(false)
-    // }
+              if (chunk.type === "message" || chunk.type === "prediction") {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantId
+                      ? { ...msg, content: msg.content + chunk.content, isThinking: false }
+                      : msg
+                  )
+                )
+              } else if (chunk.type === "error") {
+                console.warn("Stream error received:", chunk.content)
+                if (chunk.content !== "the connection is closed") {
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantId
+                        ? { ...msg, content: msg.content + `\n\n[ERROR: ${chunk.content}]`, isThinking: false }
+                        : msg
+                    )
+                  )
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing stream chunk:", line, e)
+            }
+          }
+        }
+      } catch (readerError) {
+        console.error("Stream reading error:", readerError)
+      } finally {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId && msg.isThinking
+              ? { ...msg, isThinking: false }
+              : msg
+          )
+        )
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId
+            ? { ...msg, content: "Sorry, an error occurred. Please try again.", isThinking: false }
+            : msg
+        )
+      )
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleFilesChange = (files: FileList | null) => setSelectedFiles(files)
@@ -319,7 +311,7 @@ export default function ChatDetailPage() {
             </div>
 
             <p className="text-xs text-foreground-muted mt-1">
-              Press Shift + Enter for new line
+              Press <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd> for new line
             </p>
           </div>
         </div>

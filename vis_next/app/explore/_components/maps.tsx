@@ -64,12 +64,10 @@ export function MapDisplay() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
-  // store last-applied values so we only update when changed
   const lastStylesRef = useRef<string | null>(null);
   const observerRef = useRef<MutationObserver | null>(null);
   const debounceRef = useRef<number | null>(null);
 
-  // Compute theme-derived values on mount and when html.class changes via observer
   const [themeColors, setThemeColors] = useState(() => {
     const rs = safeGetComputedStyle();
     const tn = resolveThemeName();
@@ -82,7 +80,6 @@ export function MapDisplay() {
     return createMapStyles(rs as any, tn);
   });
 
-  // stable memoized icon definitions so MarkerF doesn't get new icon objects each render
   const userOuterIcon = useMemo(() => {
     return userLocation
       ? {
@@ -95,7 +92,6 @@ export function MapDisplay() {
           scale: 20,
         }
       : undefined;
-    // themeColors intentionally in deps so it updates when theme changes
   }, [themeColors, userLocation]);
 
   const userInnerIcon = useMemo(() => {
@@ -111,9 +107,7 @@ export function MapDisplay() {
       : undefined;
   }, [themeColors, userLocation]);
 
-  // place icon memoized to avoid recreating anchor points each render
   const placeIcon = useMemo(() => {
-    // create the Point only when the Google Maps API is available to avoid "google is not defined"
     const g = typeof window !== 'undefined' && (window as any).google ? (window as any).google : null;
     const anchor = g ? new g.maps.Point(12, 24) : undefined;
 
@@ -133,24 +127,20 @@ export function MapDisplay() {
     return iconObj as unknown as google.maps.Icon;
   }, [themeColors]);
 
-  // apply styles to map when map instance changes or when mapStyles change
   useEffect(() => {
     if (!map) return;
 
     const serialized = JSON.stringify(mapStyles);
-    if (serialized === lastStylesRef.current) return; // nothing changed
+    if (serialized === lastStylesRef.current) return;
 
     try {
       map.setOptions({ styles: mapStyles });
       lastStylesRef.current = serialized;
     } catch (e) {
-      // guard against errors if map is not fully ready
-      // eslint-disable-next-line no-console
       console.warn('Failed to set map styles:', e);
     }
   }, [map, mapStyles]);
 
-  // handle onLoad / onUnmount wrappers
   const handleMapLoad = (mapInstance: google.maps.Map) => {
     setMap(mapInstance);
     onLoad(mapInstance);
@@ -161,7 +151,6 @@ export function MapDisplay() {
     onUnmount();
   };
 
-  // Observe <html> class changes and update theme + styles (debounced)
   useEffect(() => {
     const root = document.documentElement;
     if (!root) return;
@@ -172,7 +161,6 @@ export function MapDisplay() {
       const newThemeColors = createThemeColors(rs as any, tn);
       const newMapStyles = createMapStyles(rs as any, tn);
 
-      // Only update state if values changed (shallow compare via JSON)
       const colorsChanged = JSON.stringify(newThemeColors) !== JSON.stringify(themeColors);
       const stylesChanged = JSON.stringify(newMapStyles) !== JSON.stringify(mapStyles);
 
@@ -181,7 +169,6 @@ export function MapDisplay() {
     };
     applyThemeChanges();
 
-    // debounce wrapper for mutation observer callback
     const onMutations = () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
       debounceRef.current = window.setTimeout(() => {
@@ -206,8 +193,7 @@ export function MapDisplay() {
       observerRef.current = null;
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // run once on mount
+  }, []);
 
   if (!isLoaded) {
     return (

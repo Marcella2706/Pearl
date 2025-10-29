@@ -1,6 +1,7 @@
 "use client"
 import { OTPInput } from "./otpInput"
 import { Button } from "@/components/ui/button"
+import { redirect } from "next/navigation"
 import { useState } from "react"
 export default function OTPEntryPage({generateOTP}:{
  generateOTP:()=>string
@@ -44,7 +45,7 @@ const handleResendOTP = () => {
         <h1 className="text-2xl font-bold text-center text-foreground transition-colors duration-300">
           Enter OTP
         </h1>
-        <p className="text-sm text-center mb-4 text-secondly transition-colors duration-300">
+        <p className="text-sm text-center mb-4 text-foreground transition-colors duration-300">
           Please enter the 6-digit code sent to your device
         </p>
         
@@ -73,7 +74,7 @@ const handleResendOTP = () => {
             handleOTPComplete(otp)
             }}
             disabled={isSubmitting}
-            className="rounded-lg py-2 px-4 bg-accent text-background hover:bg-accent-hover transition-all duration-300"
+            className="rounded-lg py-2 px-4 bg-primary text-background hover:bg-primary transition-all duration-300"
           >
             {isSubmitting ? "Verifying..." : "Verify OTP"}
           </Button>

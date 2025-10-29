@@ -15,13 +15,9 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
-
-  // Filter out Home, Feature, About Us links
   const filteredLinks = links.filter(
     (link) => !['Home', 'Features', 'About Us'].includes(link.linkTo)
   );
-
-  // Close menu when switching from mobile to desktop
   useState(() => {
     if (!isMobile && isOpen) {
       setIsOpen(false);
@@ -31,7 +27,6 @@ const Header = () => {
   return (
     <section className="py-3 border-b border-secondly">
       <div className="flex items-center justify-between w-[90%] max-w-[1440px] mx-auto">
-        {/* Logo */}
         <div className='flex items-center gap-2 font-bold text-xl text-foreground'>
           <Image 
             src={'/images/logo.png'} 
@@ -44,7 +39,6 @@ const Header = () => {
           Jivika
         </div>
 
-        {/* Desktop Navigation */}
         {!isMobile && (
           <>
             <nav className="flex items-center gap-8">
@@ -66,7 +60,7 @@ const Header = () => {
           </>
         )}
 
-        {/* Mobile Menu Button */}
+
         {isMobile && (
           <div 
             className="relative p-2 cursor-pointer z-50"
@@ -88,11 +82,9 @@ const Header = () => {
         )}
       </div>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMobile && isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -101,8 +93,6 @@ const Header = () => {
               className="fixed inset-0 bg-black/50 z-40"
               onClick={() => setIsOpen(false)}
             />
-
-            {/* Mobile Menu */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
@@ -113,7 +103,6 @@ const Header = () => {
               }}
               className="fixed top-0 right-0 h-full w-[280px] bg-background-secondary shadow-2xl z-50 p-6 flex flex-col gap-8"
             >
-              {/* Close button */}
               <div className="flex justify-end">
                 <button
                   onClick={() => setIsOpen(false)}
@@ -123,8 +112,6 @@ const Header = () => {
                   ✕
                 </button>
               </div>
-
-              {/* Mobile Navigation Links */}
               <nav className="flex flex-col gap-6">
                 {filteredLinks.map((link, i) => (
                   <div key={i} onClick={() => setIsOpen(false)}>
@@ -136,12 +123,9 @@ const Header = () => {
                 ))}
               </nav>
 
-              {/* Theme Switcher */}
               <div className="mt-4">
                 <ThemeSwitcher />
               </div>
-
-              {/* Auth Actions */}
               <div className="mt-auto flex flex-col gap-4">
                 <div 
                   onClick={() => {

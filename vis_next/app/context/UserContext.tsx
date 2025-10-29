@@ -3,6 +3,7 @@
 import { createContext, useContext, useState } from 'react';
 import { useCurrentUser } from '@/hooks/useUser';
 import axios from 'axios';
+import { setAuthToken, removeAuthToken } from '@/lib/auth-utils';
 
 export interface User {
   name: string;
@@ -54,7 +55,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
   
       if (response.data?.token) {
-        localStorage.setItem('__Pearl_Token', response.data.token);
+        setAuthToken(response.data.token);
       }
   
       localStorage.setItem('__Google_Access_Token__', token);
@@ -105,7 +106,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     const responseData = await response.data;
     if (responseData.token) {
-      localStorage.setItem('__Pearl_Token', responseData.token);
+      setAuthToken(responseData.token);
     }
   }
 
@@ -120,7 +121,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   
       const responseData = response.data; 
       if (responseData.token) {
-        localStorage.setItem('__Pearl_Token', responseData.token);
+        setAuthToken(responseData.token);
         return true; 
       }
       return false;
@@ -152,7 +153,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Password reset response:", response.data);
   }
   const logout = () => {
-    localStorage.removeItem('__Pearl_Token');
+    removeAuthToken();
     setGoogleAccessToken(null);
     window.location.reload();
   };

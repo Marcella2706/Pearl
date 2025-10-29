@@ -1,8 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { uploadImageToS3, UploadResult } from "@/lib/aws"
+import { Upload, X } from "lucide-react"
+import { getAuthToken } from "@/lib/auth-utils"
 
 export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated }: any) {
   const [name, setName] = useState(currentUser?.name || "")
@@ -10,25 +13,69 @@ export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated 
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" | "" }>({ text: "", type: "" })
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   if (!open) return null 
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        setMessage({ text: "Invalid file type. Only images are allowed.", type: "error" })
+        return
+      }
+      const maxSize = 10 * 1024 * 1024 
+      if (file.size > maxSize) {
+        setMessage({ text: "File size too large. Maximum size is 10MB.", type: "error" })
+        return
+      }
+      
+      setSelectedFile(file)
+      setMessage({ text: "", type: "" })
+    }
+  }
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
 
   const handleSave = async () => {
     if (!hasChanges) return 
 
     setLoading(true)
     setMessage({ text: "", type: "" })
+    
+    let finalProfilePhoto = profilePhoto
+
     try {
+      if (selectedFile) {
+        setUploadingImage(true)
+        const uploadResult: UploadResult = await uploadImageToS3(selectedFile)
+        
+        if (uploadResult.success && uploadResult.url) {
+          finalProfilePhoto = uploadResult.url
+        } else {
+          throw new Error(uploadResult.error || "Image upload failed")
+        }
+        setUploadingImage(false)
+      }
+
       const res = await fetch(`http://localhost:2706/api/v1/user/update-profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("__Pearl_Token")}`,
+          Authorization: `Bearer ${getAuthToken()}`,
         },
         body: JSON.stringify({
           name,
-          profilePhoto,
+          profilePhoto: finalProfilePhoto,
           currentPassword: currentPassword || null,
           newPassword: newPassword || null,
         }),
@@ -50,6 +97,7 @@ export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated 
   const hasChanges = !!currentUser && (
     name.trim() !== currentUser.name ||
     profilePhoto.trim() !== (currentUser.profilePhoto || "") ||
+    selectedFile !== null ||
     (currentPassword.trim() !== "" && newPassword.trim() !== "")
   )
 
@@ -69,12 +117,69 @@ export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated 
           </div>
 
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Profile Photo URL</p>
-            <Input
-              value={profilePhoto}
-              onChange={(e) => setProfilePhoto(e.target.value)}
-              placeholder="Paste image URL"
-            />
+            <p className="text-sm text-muted-foreground mb-2">Profile Photo</p>
+            <div className="space-y-3">
+              {(profilePhoto || selectedFile) && (
+                <div className="relative w-20 h-20 rounded-full overflow-hidden border border-border">
+                  <img 
+                    src={selectedFile ? URL.createObjectURL(selectedFile) : profilePhoto} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {selectedFile ? "Change Photo" : "Upload Photo"}
+                </Button>
+                
+                {selectedFile && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveFile}
+                    disabled={uploadingImage}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            
+              {selectedFile && (
+                <p className="text-xs text-muted-foreground">
+                  Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                </p>
+              )}
+              
+              {uploadingImage && (
+                <p className="text-xs text-blue-500">Uploading image...</p>
+              )}
+              
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs text-muted-foreground mb-1">Or paste image URL:</p>
+                <Input
+                  value={profilePhoto}
+                  onChange={(e) => setProfilePhoto(e.target.value)}
+                  placeholder="Paste image URL"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-border">
@@ -109,8 +214,8 @@ export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated 
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading || !hasChanges}>
-            {loading ? "Saving..." : "Save Changes"}
+          <Button onClick={handleSave} disabled={loading || uploadingImage || !hasChanges}>
+            {loading || uploadingImage ? (uploadingImage ? "Uploading..." : "Saving...") : "Save Changes"}
           </Button>
         </div>
       </div>

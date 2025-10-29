@@ -26,7 +26,6 @@ async def lifespan(app: FastAPI):
     conninfo = (
         f"postgres://{PSQL_USERNAME}:{PSQL_PASSWORD}"
         f"@{PSQL_HOST}:{PSQL_PORT}/{PSQL_DATABASE}"
-        f"?sslmode={PSQL_SSLMODE}"
     )
     
     pool = AsyncConnectionPool(
@@ -38,7 +37,7 @@ async def lifespan(app: FastAPI):
 
     async with pool.connection() as conn:
         memory = AsyncPostgresSaver(conn)
-        # await memory.setup()
+        await memory.setup()
         AppState.memory = memory
 
     app_builder = create_graph()

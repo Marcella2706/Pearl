@@ -10,10 +10,21 @@ import {
   X,
   MessageSquare,
   Loader2,
+  LogOut,
+  ChevronUp,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import axios from "axios"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { removeAuthToken, getAuthToken } from "@/lib/auth-utils"
 
 interface ChatItem {
   id: string
@@ -30,15 +41,30 @@ export function Sidebar({ isMobile }: SidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
+  const [user, setUser] = useState<any>(null)
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const res = await fetch(`http://localhost:2706/api/v1/user/current-user`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        console.log("Fetched user:", data)
+        setUser(data)
+      } else {
+        console.error("Failed to fetch user:", res.status)
+      }
+    }
+    fetchUser()
+  }, [])
   useEffect(() => {
     const fetchChats = async () => {
       try {
         setIsLoading(true)
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("__Pearl_Token")
-            : null
+        const token = getAuthToken()
 
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`,
@@ -52,15 +78,13 @@ export function Sidebar({ isMobile }: SidebarProps) {
 
         const data = response.data
 
-        // Normalize response shape:
-        // - some endpoints return an array of sessions
-        // - others may return { chats: [...] }
+   
         const sessions = Array.isArray(data) ? data : data?.chats || []
 
         const normalized: ChatItem[] = sessions.map((s: any) => ({
           id: s.id,
           title: s.title || "Untitled",
-          // convert snake_case created_at to createdAt if present
+        
           createdAt: s.created_at ?? s.createdAt ?? "",
         }))
 
@@ -86,7 +110,7 @@ export function Sidebar({ isMobile }: SidebarProps) {
     {
       headers: {
         'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${localStorage.getItem('__Pearl_Token')}`,
+        'Authorization': `Bearer ${getAuthToken()}`,
       },
     }
     ).then((res)=>{
@@ -97,6 +121,11 @@ export function Sidebar({ isMobile }: SidebarProps) {
     }).catch((error)=>{
       console.error("Error creating new chat:",error);
     });
+  }
+
+  const handleLogout = () => {
+    removeAuthToken()
+    window.location.href = "/auth" 
   }
   if (isMobile) {
     return (
@@ -176,23 +205,45 @@ export function Sidebar({ isMobile }: SidebarProps) {
           </div>
 
           <div className="p-4 border-t border-sidebar-border space-y-2">
-            <Link href="/profile" className="w-full">
-              <Button
-                variant="ghost"
-                className={`w-full justify-start gap-3 ${
-                  isActive("/profile")
-                    ? "bg-sidebar-accent text-sidebar-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
-                }`}
-              >
-                <User size={20} />
-                Profile
-              </Button>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between gap-3 text-sidebar-foreground hover:bg-sidebar-accent"
+                >
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8 border border-border">
+                      <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {user?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-medium truncate max-w-[120px]">
+                        {user?.name || "Unnamed User"}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronUp size={16} className="shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                    <User size={16} />
+                    View Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
+                  <LogOut size={16} />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </aside>
 
-        {/* Overlay Background */}
         {isOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30"
@@ -204,7 +255,6 @@ export function Sidebar({ isMobile }: SidebarProps) {
     )
   }
 
-  // Desktop Sidebar (non-mobile)
   return (
     <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
       <div className="p-4">
@@ -267,19 +317,42 @@ export function Sidebar({ isMobile }: SidebarProps) {
       </div>
 
       <div className="p-4 border-t border-sidebar-border space-y-2">
-        <Link href="/profile" className="w-full">
-          <Button
-            variant="ghost"
-            className={`w-full justify-start gap-3 ${
-              isActive("/profile")
-                ? "bg-sidebar-accent text-sidebar-primary"
-                : "text-sidebar-foreground hover:bg-sidebar-accent"
-            }`}
-          >
-            <User size={20} />
-            Profile
-          </Button>
-        </Link>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between gap-3 text-sidebar-foreground hover:bg-sidebar-accent"
+            >
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8 border border-border">
+                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                    {user?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium truncate max-w-[120px]">
+                    {user?.name || "Unnamed User"}
+                  </span>
+                </div>
+              </div>
+              <ChevronUp size={16} className="shrink-0" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                <User size={16} />
+                View Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
+              <LogOut size={16} />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   )
