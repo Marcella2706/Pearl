@@ -10,8 +10,55 @@ from .prompts import brainXrayPrompt, clinicalPrompt
 def classifierNode(state: ChatStateMain) -> ChatStateMain:
     return state
 
+import requests
+import uuid
+import rich
+
 def xrayClassifierNode(state: ChatStateMain) -> ChatStateMain:
-    return state
+    try:
+        image_url = state.get("imageURL")
+        if not image_url:
+            raise ValueError("No image URL provided in state.")
+        response = requests.get(image_url)
+        response.raise_for_status()
+        image_bytes = response.content
+        
+        destination_url = "http://127.0.0.1:5000/predict_brain"
+        files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
+        response = requests.post(destination_url, files=files)
+        response.raise_for_status()
+        print("📡 Classifier response status:", response.status_code)
+        print("📦 Classifier response body:", response.text)
+
+        response.raise_for_status()
+        data = response.json()
+        prediction = data.get("prediction")
+
+        state.prediction = prediction
+        state.output = f"Prediction: {prediction}"
+
+        OBJECT_NAME = f"images/classifier/{uuid.uuid4().hex}.jpg"
+        try:
+            s3Client.put_object(
+                Body=image_bytes,
+                Bucket=BUCKET_NAME,
+                Key=OBJECT_NAME,
+                ContentType="image/jpeg",
+            )
+            public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
+            state.rImageUrl = public_url
+        except Exception as e:
+            rich.print(f"[red]S3 Upload Error: {e}[/red]")
+
+        return state
+
+    except Exception as e:
+        err_msg = f"Exception occurred in xrayClassifierNode: {str(e)}"
+        state.output = err_msg
+        print(f"❌ {err_msg}")
+        return state
+
+
 
 def pdfSummarizerNode(state: ChatStateMain) -> ChatStateMain:
     return state
@@ -43,15 +90,6 @@ def BrainXrayNode(state: ChatStateMain) -> ChatStateMain:
     
     public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
     return {"prediction": result.get("prediction"), "imageURL": public_url}
-
-def BrainXrayReportNode(state: ChatStateMain) -> ChatStateMain:
-    prediction = state.get("prediction")
-    if not prediction:
-        raise ValueError("No prediction provided in state.")
-    system_message = SystemMessage(content=brainXrayPrompt.format(prediction=prediction))
-    all_messages = state.get("messages", [])
-    response = openAi_Client.invoke([system_message] + all_messages)
-    return {"messages": AIMessage(response.content)}
 
 def ChestXRayNode(state: ChatStateMain) -> ChatStateMain:
     image_url = state.get("imageURL")

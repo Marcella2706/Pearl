@@ -13,25 +13,19 @@ def startRouter(state: ChatStateMain) -> Literal['classifierNode', 'pdfSummarize
     else:
         return "clinicalNode"
 
-def imageClassifier(state: ChatStateMain) -> Literal["xrayClassifierNode", "HeartNode", "WoundNode"]:
-    messages = state.get("messages")
-    last_message = messages[-1].content.lower() if messages else ""
+def imageClassifier(state: ChatStateMain) -> Literal["xrayClassifierNode", "HeartNode"]:
+    return "xrayClassifierNode" if state.get("imageURL") else "HeartNode"
 
-    if "heart" in last_message:
-        return "HeartNode"
-    elif "xray" in last_message and state.get("imageURL"):
-        return "xrayClassifierNode"
-    elif "wound" in last_message and state.get("imageURL"):
-        return "WoundNode"
-    else:
-        return "xrayClassifierNode" if state.get("imageURL") else "HeartNode"
+def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode", "ChestXRayNode", "WoundNode"]:
+    prediction = getattr(state, "prediction", None)
 
-def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode","ChestXRayNode"]:
-    messages = state.get("messages")
-    last_message = messages[-1].content.lower()
+    prediction = prediction.lower()
 
-    if "brain" in last_message:
+    if "brain" in prediction:
         return "BrainXRayNode"
-    elif "chest" in last_message:
+    elif "lung" in prediction:
         return "ChestXRayNode"
-    return "ChestXRayNode"
+    elif "wound" in prediction:
+        return "WoundNode"
+
+
