@@ -2,9 +2,6 @@
 
 import {
   useJsApiLoader,
-  GoogleMap,
-  MarkerF,
-  InfoWindowF,
 } from '@react-google-maps/api';
 import {
   useState,
@@ -15,7 +12,6 @@ import {
   useEffect,
 } from 'react';
 
-// This should match the data structure you send from your backend
 export interface Place {
   place_id: string;
   name: string;
@@ -25,9 +21,12 @@ export interface Place {
       lng: number;
     };
   };
-  vicinity: string; // The address
-  types: string[]; // e.g., ['doctor', 'hospital', 'health']
+  vicinity: string;
+  types: string[];
 }
+
+const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "AIzaSyD1JTFh6g91lYnukPChWWYCyoNtQvFjSaE";
+const NEXT_PUBLIC_BACKEND_URL = "http://localhost:2706";
 
 interface MapContextType {
   isLoaded: boolean;
@@ -47,7 +46,7 @@ const MapContext = createContext<MapContextType | null>(null);
 export function MapProvider({ children }: { children: ReactNode }) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    googleMapsApiKey: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -67,17 +66,39 @@ export function MapProvider({ children }: { children: ReactNode }) {
   );
 
   const fetchNearbyPlaces = async (lat: number, lng: number) => {
-    setStatus('Finding doctors and hospitals...');
+    setStatus('Finding hospitals near you...');
     try {
       const res = await fetch(
-        `/api/find-nearby?lat=${lat}&lng=${lng}&types=doctor,hospital`
+        `${NEXT_PUBLIC_BACKEND_URL}/api/v1/places/nearby-osm?lat=${lat}&lng=${lng}&radius=3000&keyword=hospital`
       );
-      
+
       if (!res.ok) throw new Error('Failed to fetch places from backend');
-      
-      const data: Place[] = await res.json();
-      setPlaces(data);
-      setStatus(data.length > 0 ? `Found ${data.length} places.` : 'No places found.');
+
+      const osmData = await res.json();
+
+      if (!osmData.elements) {
+        setStatus('No places found.');
+        setPlaces([]);
+        return;
+      }
+
+      const mapped: Place[] = osmData.elements
+        .filter((el: any) => el.lat && el.lon && el.tags?.name)
+        .map((el: any) => ({
+          place_id: el.id.toString(),
+          name: el.tags.name || 'Unnamed Place',
+          geometry: {
+            location: {
+              lat: el.lat,
+              lng: el.lon,
+            },
+          },
+          vicinity: el.tags['addr:full'] || el.tags['addr:city'] || 'Address not available',
+          types: [el.tags.amenity || 'unknown'],
+        }));
+
+      setPlaces(mapped);
+      setStatus(mapped.length > 0 ? `Found ${mapped.length} hospitals nearby.` : 'No hospitals found.');
     } catch (error) {
       console.error(error);
       setStatus('Error finding nearby places.');
@@ -85,7 +106,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    if (map) {
+    if (map && isLoaded) {
       setStatus('Map loaded. Getting your location...');
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -95,8 +116,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
               lng: position.coords.longitude,
             };
             setUserLocation(pos);
-            panTo(pos); 
-            fetchNearbyPlaces(pos.lat, pos.lng); 
+            panTo(pos);
+            fetchNearbyPlaces(pos.lat, pos.lng);
           },
           () => {
             setStatus('Location access denied. Please enable it in your browser.');
@@ -106,10 +127,12 @@ export function MapProvider({ children }: { children: ReactNode }) {
         setStatus('Geolocation not supported by your browser.');
       }
     }
-  }, [map, panTo]);
+  }, [map, isLoaded, panTo]);
+
   const onLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
   }, []);
+
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
@@ -120,6 +143,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
       panTo(place.geometry.location);
     }
   };
+
   const value = {
     isLoaded,
     map,
