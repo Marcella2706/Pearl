@@ -25,9 +25,6 @@ export interface Place {
   types: string[];
 }
 
-const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "AIzaSyD1JTFh6g91lYnukPChWWYCyoNtQvFjSaE";
-const NEXT_PUBLIC_BACKEND_URL = "http://localhost:2706";
-
 interface MapContextType {
   isLoaded: boolean;
   map: google.maps.Map | null;
@@ -46,7 +43,7 @@ const MapContext = createContext<MapContextType | null>(null);
 export function MapProvider({ children }: { children: ReactNode }) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -69,7 +66,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setStatus('Finding hospitals near you...');
     try {
       const res = await fetch(
-        `${NEXT_PUBLIC_BACKEND_URL}/api/v1/places/nearby-osm?lat=${lat}&lng=${lng}&radius=3000&keyword=hospital`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/places/nearby-osm?lat=${lat}&lng=${lng}&radius=3000&keyword=hospital`
       );
 
       if (!res.ok) throw new Error('Failed to fetch places from backend');
