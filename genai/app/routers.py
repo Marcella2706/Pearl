@@ -1,26 +1,24 @@
 from typing import Literal
 from .state import ChatStateMain
 
-def startRouter(state: ChatStateMain) -> Literal['classifierNode', 'pdfSummarizerNode', 'clinicalNode']:
+def startRouter(state: ChatStateMain) -> Literal['xrayClassifierNode', 'HeartNode', 'clinicalNode']:
     imageUrl = state.get("imageURL")
-    pdfUrl = state.get("pdfURL")
+    request = state.get("request")
+    if(not request):
+        request=""
+    request=request.lower() 
     if imageUrl:
-        return "classifierNode"
-    elif "heart" in state.get("messages", [])[-1].content.lower():
-        return "classifierNode"
-    elif pdfUrl:
-        return "pdfSummarizerNode"
+        return "xrayClassifierNode"
+    elif "heart" in request:
+        return "HeartNode"
     else:
         return "clinicalNode"
 
-def imageClassifier(state: ChatStateMain) -> Literal["xrayClassifierNode", "HeartNode"]:
-    return "xrayClassifierNode" if state.get("imageURL") else "HeartNode"
 
 def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode", "ChestXRayNode", "WoundNode"]:
-    prediction = getattr(state, "prediction", None)
-
+    prediction = state.get("prediction")
+    print("🔍 xrayClassifierNode prediction:", prediction)
     prediction = prediction.lower()
-
     if "brain" in prediction:
         return "BrainXRayNode"
     elif "lung" in prediction:

@@ -26,7 +26,7 @@ async def main():
     ) as pool, pool.connection() as conn:
         
         memory = AsyncPostgresSaver(conn)
-        await memory.setup()
+        # await memory.setup()
 
         app_builder = create_graph()
         

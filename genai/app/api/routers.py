@@ -89,15 +89,20 @@ async def chat_with_bot(
     if not crud.check_session_owner(db, session_id=session_id, user_id=user.id):
         raise HTTPException(status_code=404, detail="Session not found or not owned by user")
     thread_id = str(session_id)
-    crud.add_message(db, session_id, MessageCreate(role="human", content=message.content))
-    invocation_input = {"messages": [HumanMessage(content=message.content)]}
+
     user_msg_lower = message.content.lower()
     image_url = message.imageURL
-    
+
     if not image_url:
         if "brain xray" in user_msg_lower:
             image_url = TEST_IMAGE_URLS["brain"]
-            
+
+    # Save human message(s): text message first, and if there's an image URL, save it separately as a human message (URL only)
+    crud.add_message(db, session_id, MessageCreate(role="human", content=message.content))
+    if image_url:
+        crud.add_message(db, session_id, MessageCreate(role="human", content=image_url))
+
+    invocation_input = {"messages": [HumanMessage(content=message.content)]}
     if image_url:
         invocation_input["imageURL"] = image_url
 
@@ -105,6 +110,7 @@ async def chat_with_bot(
 
     async def stream_generator():
         final_ai_response = ""
+        final_image_urls: List[str] = []
         try:
             async for chunk in agent.astream(invocation_input, config):
                 node_name = list(chunk.keys())[0]
@@ -114,42 +120,61 @@ async def chat_with_bot(
                     continue
 
                 response_chunk = None
-                
+
                 if "messages" in node_output:
                     ai_message_or_list = node_output["messages"]
-                    
+
                     if isinstance(ai_message_or_list, list):
-                        ai_message = ai_message_or_list[-1] 
+                        ai_message = ai_message_or_list[-1]
                     else:
                         ai_message = ai_message_or_list
 
                     if isinstance(ai_message, AIMessage):
                         response_content = ai_message.content
-                        final_ai_response += response_content 
+                        final_ai_response += response_content
                         response_chunk = ChatResponseChunk(
-                            type="message", 
+                            type="message",
                             content=response_content
                         ).model_dump_json()
-                    
+
                 elif "prediction" in node_output:
                     final_nodes = ["HeartNode", "WoundNode", "ChestXRayNode"]
                     if node_name in final_nodes:
                         prediction_content = node_output["prediction"]
-                        final_ai_response += prediction_content 
+                        final_ai_response += prediction_content
                         response_chunk = ChatResponseChunk(
                             type="prediction",
                             content=prediction_content
                         ).model_dump_json()
 
+                if "rImageUrl" in node_output:
+                    r_img = node_output["rImageUrl"]
+                    urls = r_img if isinstance(r_img, list) else [r_img]
+                    for u in urls:
+                        if not u:
+                            continue
+                        final_image_urls.append(u)
+                        img_chunk = ChatResponseChunk(
+                            type="image",
+                            content=u
+                        ).model_dump_json()
+                        yield f"{img_chunk}\n"
+
                 if response_chunk:
                     yield f"{response_chunk}\n"
-            
-            if final_ai_response:
+
+            if final_ai_response or final_image_urls:
                 with SessionLocal() as db_session:
-                    crud.add_message(
-                        db_session, session_id, 
-                        MessageCreate(role="ai", content=final_ai_response)
-                    )
+                    if final_ai_response:
+                        crud.add_message(
+                            db_session, session_id,
+                            MessageCreate(role="ai", content=final_ai_response)
+                        )
+                    for img_url in final_image_urls:
+                        crud.add_message(
+                            db_session, session_id,
+                            MessageCreate(role="ai", content=img_url)
+                        )
 
         except Exception as e:
             error_chunk = ChatResponseChunk(
@@ -160,7 +185,6 @@ async def chat_with_bot(
 
     return StreamingResponse(stream_generator(), media_type="application/x-ndjson")
 
-@router.get("/{session_id}/messages", response_model=List[MessageResponse])
 @router.get("/{session_id}/messages", response_model=List[MessageResponse])
 def get_session_chat_history(
     session_id: UUID,

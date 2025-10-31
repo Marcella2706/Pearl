@@ -34,7 +34,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponseChunk(BaseModel):
     """A single chunk of the streaming response."""
-    type: Literal["message", "prediction", "error"]
+    type: Literal["message", "prediction", "error", "image"]
     content: str
     
 class SessionUpdate(BaseModel):

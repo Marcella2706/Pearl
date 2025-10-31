@@ -6,3 +6,4 @@ class ChatStateMain(MessagesState):
     prediction: Optional[str] = None
     rImageUrl: Optional[str] = None
     output: Optional[str] = None 
+    request: Optional[str] = None
