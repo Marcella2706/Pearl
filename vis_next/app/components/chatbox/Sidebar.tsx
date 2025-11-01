@@ -12,6 +12,9 @@ import {
   Loader2,
   LogOut,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -34,14 +37,23 @@ interface ChatItem {
 
 interface SidebarProps {
   isMobile: boolean
+  onCollapseChange?: (isCollapsed: boolean) => void
 }
 
-export function Sidebar({ isMobile }: SidebarProps) {
+export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
   const [chats, setChats] = useState<ChatItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
+
+  // Notify parent when collapse state changes
+  useEffect(() => {
+    if (onCollapseChange) {
+      onCollapseChange(isCollapsed)
+    }
+  }, [isCollapsed, onCollapseChange])
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -148,7 +160,7 @@ export function Sidebar({ isMobile }: SidebarProps) {
             <p className="text-xs text-muted-foreground">Doctor AI Assistant</p>
           </div>
 
-          <div className="p-4 border-b border-sidebar-border">
+          <div className="p-4 border-b border-sidebar-border space-y-3">
             <Link href="/chat" className="w-full">
               <Button
                 variant="default"
@@ -156,6 +168,16 @@ export function Sidebar({ isMobile }: SidebarProps) {
               >
                 <Plus size={20} />
                 New Chat
+              </Button>
+            </Link>
+            
+            <Link href="/explore" className="w-full">
+              <Button
+                variant="default"
+                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+              >
+                <MapPin size={20} />
+                Explore Hospitals
               </Button>
             </Link>
           </div>
@@ -255,14 +277,113 @@ export function Sidebar({ isMobile }: SidebarProps) {
     )
   }
 
+  if (isCollapsed && !isMobile) {
+    return (
+      <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground w-16 border-r border-sidebar-border">
+        <div className="p-2 flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(false)}
+            className="h-10 w-10 text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <ChevronRight size={20} />
+          </Button>
+        </div>
+
+        <div className="p-2 border-b border-sidebar-border flex flex-col items-center space-y-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleNewChat}
+            className="h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground"
+          >
+            <Plus size={20} />
+          </Button>
+          
+          <Link href="/explore">
+            <Button
+              variant="default"
+              size="sm"
+              className={`h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground
+              `}
+            >
+              <MapPin size={20} />
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center py-4 space-y-2">
+          {chats.slice(0, 4).map((chat) => (
+            <Link key={chat.id} href={`/chat/${chat.id}`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`h-10 w-10 ${
+                  isActive(`/chat/${chat.id}`)
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent"
+                }`}
+              >
+                <MessageSquare size={16} />
+              </Button>
+            </Link>
+          ))}
+        </div>
+
+        <div className="p-2 border-t border-sidebar-border flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                    {user?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="right" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                  <User size={16} />
+                  View Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
+                <LogOut size={16} />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+    )
+  }
+
   return (
     <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
-      <div className="p-4">
-        <h1 className="text-2xl font-bold text-sidebar-primary">JIVIKA</h1>
-        <p className="text-xs text-muted-foreground">Doctor AI Assistant</p>
+      <div className="p-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-sidebar-primary">JIVIKA</h1>
+          <p className="text-xs text-muted-foreground">Doctor AI Assistant</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(true)}
+          className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          <ChevronLeft size={16} />
+        </Button>
       </div>
 
-      <div className="p-4 border-b border-sidebar-border">
+      <div className="p-4 border-b border-sidebar-border space-y-3">
         <Link href="/chat" className="w-full">
           <Button
             variant="default"
@@ -271,6 +392,16 @@ export function Sidebar({ isMobile }: SidebarProps) {
           >
             <Plus size={20} />
             New Chat
+          </Button>
+        </Link>
+        
+        <Link href="/explore" className="w-full">
+          <Button
+            variant="default"
+            className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+          >
+            <MapPin size={20} />
+            Explore Hospitals
           </Button>
         </Link>
       </div>

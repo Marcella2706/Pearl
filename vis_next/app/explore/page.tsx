@@ -1,12 +1,23 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ExploreHeader from "./_components/explore_Header";
 import { MapProvider, useMap } from "../context/MapContext";
 import { MapDisplay } from "./_components/maps";
 import { motion } from "framer-motion";
-import { Search, MapPin, Star, Hospital } from "lucide-react";
+import { Search, MapPin, Star, Hospital, ChevronUp, LogOut, User, ChevronLeft, ChevronRight } from "lucide-react";
 import clsx from "clsx";
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getAuthToken, removeAuthToken } from '@/lib/auth-utils';
+import Link from 'next/link';
 
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
@@ -23,6 +34,31 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 function HospitalSidebar() {
   const { places, userLocation, selectPlace, selectedPlace } = useMap();
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+    
+    useEffect(() => {
+      const fetchUser = async () => {
+        const res = await fetch(`http://localhost:2706/api/v1/user/current-user`, {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          console.log("Fetched user:", data)
+          setUser(data)
+        } else {
+          console.error("Failed to fetch user:", res.status)
+        }
+      }
+      fetchUser()
+    }, [])
+
+  const handleLogout = () => {
+    removeAuthToken()
+    window.location.href = "/auth" 
+  }
 
   const hospitals = useMemo(() => {
     if (!places || !userLocation) return [];
@@ -45,6 +81,89 @@ function HospitalSidebar() {
       .sort((a: any, b: any) => parseFloat(a.distance) - parseFloat(b.distance));
   }, [places, userLocation, searchQuery]);
 
+  if (isCollapsed) {
+    return (
+      <motion.aside
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 80 }}
+        className="w-16 flex flex-col bg-background-secondary/60 backdrop-blur-lg border border-border rounded-2xl shadow-lg p-2"
+        style={{ height: "calc(100vh - 96px)" }} 
+      >
+        <div className="flex justify-center mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(false)}
+            className="h-10 w-10 text-foreground hover:bg-accent"
+          >
+            <ChevronRight size={20} />
+          </Button>
+        </div>
+
+        <div className="flex justify-center mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 w-10 text-foreground hover:bg-accent"
+          >
+            <Search size={18} />
+          </Button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center space-y-2">
+          {hospitals.slice(0, 3).map((h: any, i: number) => (
+            <Button
+              key={h.place_id || i}
+              variant="ghost"
+              size="sm"
+              onClick={() => selectPlace(h)}
+              className={`h-10 w-10 ${
+                selectedPlace?.place_id === h.place_id
+                  ? "bg-primary/10 text-primary"
+                  : "text-foreground hover:bg-accent"
+              }`}
+            >
+              <Hospital size={16} />
+            </Button>
+          ))}
+        </div>
+
+        <div className="mt-auto flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-10 w-10 text-foreground hover:bg-accent"
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                    {user?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="right" className="w-[320px]">
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="flex items-center gap-2 cursor-pointer h-10">
+                  <User size={16} />
+                  View Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700 h-10">
+                <LogOut size={16} />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </motion.aside>
+    );
+  }
+
   return (
     <motion.aside
       initial={{ x: -50, opacity: 0 }}
@@ -64,6 +183,14 @@ function HospitalSidebar() {
             className="w-full pl-10 pr-3 py-2 rounded-xl bg-background border border-border text-foreground placeholder:text-foreground-muted focus:ring-2 focus:ring-primary transition"
           />
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(true)}
+          className="h-8 w-8 text-foreground hover:bg-accent"
+        >
+          <ChevronLeft size={16} />
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
@@ -106,6 +233,47 @@ function HospitalSidebar() {
             {userLocation ? "No hospitals found nearby." : "Fetching location..."}
           </p>
         )}
+      </div>
+      <div className="mt-auto border-t border-border pt-6 pb-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-between gap-3 text-foreground hover:bg-accent h-16 px-4"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 border border-border">
+                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                    {user?.name?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium truncate max-w-[140px]">
+                    {user?.name || "Unnamed User"}
+                  </span>
+                  <span className="text-xs text-foreground-muted truncate max-w-[140px]">
+                    {user?.email || "user@example.com"}
+                  </span>
+                </div>
+              </div>
+              <ChevronUp size={16} className="shrink-0" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-[320px] xl:w-[330px]">
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center gap-2 cursor-pointer h-10">
+                <User size={16} />
+                View Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700 h-10">
+              <LogOut size={16} />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.aside>
   );

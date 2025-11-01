@@ -11,6 +11,8 @@ type Props = {
   logoSrc?: string;
   onBack?: () => void;
   rightSlot?: React.ReactNode;
+  ctaLabel?: string;
+  ctaHref?: string; 
 };
 
 export default function ExploreHeader({
@@ -19,6 +21,8 @@ export default function ExploreHeader({
   logoSrc = '/images/logo.png',
   onBack,
   rightSlot,
+  ctaLabel='Chat',
+  ctaHref='chat',
 }: Props) {
   const router = useRouter();
   function handleBack() {
@@ -28,6 +32,11 @@ export default function ExploreHeader({
     } catch (e) {
       if (typeof window !== 'undefined') window.history.back();
     }
+  }
+
+  function handleCta() {
+    if (!ctaHref) return;
+    router.push(ctaHref);
   }
 
   return (
@@ -43,7 +52,6 @@ export default function ExploreHeader({
               <ArrowLeft className="h-5 w-5 text-primary" />
             </button>
 
-            {/* Brand */}
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 rounded-full overflow-hidden shadow-md ring-1 ring-gray-700">
                 <NextImage
@@ -59,13 +67,26 @@ export default function ExploreHeader({
               <div className="flex flex-col leading-tight">
                 <span className="font-semibold text-lg text-foreground tracking-tight">{title}</span>
                 {subtitle ? (
-                  <span className="text-xs text-foregound-muted -mt-0.5">{subtitle}</span>
+                  <span className="text-xs text-foreground-muted -mt-0.5">{subtitle}</span>
                 ) : null}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3"><ThemeSwitcher></ThemeSwitcher></div>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+
+            {rightSlot}
+       
+            {ctaLabel && ctaHref ? (
+              <button
+                onClick={handleCta}
+                className="ml-2 px-3 py-1.5 rounded-md bg-primary text-background hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-accent/60"
+              >
+                {ctaLabel}
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GoogleMap, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { useMap } from '@/app/context/MapContext';
 import { motion } from 'framer-motion';
@@ -32,7 +32,7 @@ function resolveThemeName(): string {
   return document.documentElement.className || 'light';
 }
 
-function createThemeColors(rootStyles: CSSStyleDeclaration ,themeName: string) {
+function createThemeColors(rootStyles: CSSStyleDeclaration, _themeName: string) {
   return {
     accent: rootStyles.getPropertyValue('--color-primary').trim(),
     accentHover: rootStyles.getPropertyValue('--color-primary').trim(),
@@ -40,7 +40,7 @@ function createThemeColors(rootStyles: CSSStyleDeclaration ,themeName: string) {
   };
 }
 
-function createMapStyles(rootStyles: CSSStyleDeclaration, themeName: string) {
+function createMapStyles(rootStyles: CSSStyleDeclaration, _themeName: string) {
   const backgroundColor = rootStyles.getPropertyValue('--color-background-secondary').trim();
   const foregroundColor = rootStyles.getPropertyValue('--color-foreground-muted').trim();
   const accentColor = rootStyles.getPropertyValue('--color-primary').trim();
@@ -108,22 +108,6 @@ export function MapDisplay() {
       : undefined;
   }, [themeColors, userLocation]);
 
-  const placeIcon = useMemo(() => {
-    const g = typeof window !== 'undefined' && (window as any).google ? (window as any).google : null;
-    const anchor = g ? new g.maps.Point(12, 24) : undefined;
-
-    const iconObj: any = {
-      path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z",
-      fillColor: themeColors.accentHover,
-      fillOpacity: 0.95,
-      strokeColor: themeColors.background,
-      strokeWeight: 2,
-      scale: 1.6,
-    };
-
-    if (anchor) iconObj.anchor = anchor;
-    return iconObj as unknown as google.maps.Icon;
-  }, [themeColors]);
 
   useEffect(() => {
     if (!map) return;

@@ -13,7 +13,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { getAuthToken } from "@/lib/auth-utils"
 
 interface StreamChunk {
-  type: "message" | "prediction" | "error"
+  type: "message" | "prediction" | "error" | "image"
   content: string
 }
 
@@ -25,6 +25,7 @@ interface Message {
   isThinking?: boolean
   imageUrl?: string
   messageType?: "text" | "image" | "text_with_image"
+  isPrediction?: boolean
 }
 
 export default function ChatDetailPage() {
@@ -57,6 +58,7 @@ export default function ChatDetailPage() {
           role: msg.role === "human" ? "user" : "assistant",
           content: msg.content,
           timestamp: new Date(msg.created_at), 
+          // If your backend stored images as ai content URLs, you may want to set messageType/imageUrl here.
         }))
         
         setMessages(fetchedMessages)
@@ -85,7 +87,6 @@ export default function ChatDetailPage() {
           imageUrl = uploadResult.url;
         } else {
           console.error("Image upload failed:", uploadResult.error);
-         
           return;
         }
       } catch (error) {
@@ -179,10 +180,27 @@ export default function ChatDetailPage() {
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantId
-                      ? { ...msg, content: msg.content + chunk.content, isThinking: false }
+                      ? { 
+                          ...msg, 
+                          content: msg.content + chunk.content, 
+                          isThinking: false,
+                          isPrediction: chunk.type === "prediction" ? true : msg.isPrediction
+                        }
                       : msg
                   )
                 )
+              } else if (chunk.type === "image") {
+                // Create a separate assistant message for each image chunk so they display correctly.
+                const imgMessage: Message = {
+                  id: (Date.now() + Math.random()).toString(),
+                  role: "assistant",
+                  content: "", // optional caption could be added
+                  timestamp: new Date(),
+                  imageUrl: chunk.content,
+                  messageType: "image",
+                  isThinking: false,
+                }
+                setMessages((prev) => [...prev, imgMessage])
               } else if (chunk.type === "error") {
                 console.warn("Stream error received:", chunk.content)
                 if (chunk.content !== "the connection is closed") {
@@ -203,6 +221,7 @@ export default function ChatDetailPage() {
       } catch (readerError) {
         console.error("Stream reading error:", readerError)
       } finally {
+        // Ensure assistant thinking flag is cleared
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantId && msg.isThinking

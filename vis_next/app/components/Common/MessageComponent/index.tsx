@@ -15,13 +15,48 @@ interface MessageComponentProps {
   message: MessageData;
 }
 
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.tiff'];
+
+function isValidUrl(value: string) {
+  try {
+    // allow protocol-relative URLs too
+    if (value.startsWith('//')) {
+      new URL(window.location.protocol + value);
+    } else {
+      new URL(value);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function isImageUrl(value: string) {
+  if (!value) return false;
+  const trimmed = value.trim();
+  if (!isValidUrl(trimmed)) return false;
+  try {
+    const url = trimmed.startsWith('//') ? new URL(window.location.protocol + trimmed) : new URL(trimmed);
+    const pathname = url.pathname.toLowerCase();
+    return IMAGE_EXTENSIONS.some(ext => pathname.endsWith(ext));
+  } catch {
+    return false;
+  }
+}
+
 const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
 
-  const hasImage = message.imageUrl && message.imageUrl.trim() !== '';
-  const hasText = message.content && message.content.trim() !== '';
-  
+  const contentTrimmed = message.content ? message.content.trim() : '';
+  const contentIsImageUrl = isImageUrl(contentTrimmed);
+
+  // If the content itself is an image URL and no explicit imageUrl provided, treat content as imageUrl.
+  const computedImageUrl = (message.imageUrl && message.imageUrl.trim() !== '') ? message.imageUrl.trim() : (contentIsImageUrl ? contentTrimmed : undefined);
+
+  const hasImage = !!computedImageUrl;
+  const hasText = !!contentTrimmed && !contentIsImageUrl;
+
   let actualMessageType = message.messageType;
   if (!actualMessageType) {
     if (hasImage && hasText) {
@@ -83,7 +118,7 @@ const MessageComponent: React.FC<MessageComponentProps> = ({ message }) => {
             {hasImage && (
               <div className="rounded-lg overflow-hidden">
                 <img
-                  src={message.imageUrl}
+                  src={computedImageUrl}
                   alt="Shared image"
                   className="max-w-full h-auto rounded-lg shadow-sm"
                   style={{ maxHeight: '300px', objectFit: 'cover' }}
