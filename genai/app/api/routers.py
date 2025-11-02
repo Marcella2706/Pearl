@@ -97,7 +97,6 @@ async def chat_with_bot(
         if "brain xray" in user_msg_lower:
             image_url = TEST_IMAGE_URLS["brain"]
 
-    # Save human message(s): text message first, and if there's an image URL, save it separately as a human message (URL only)
     crud.add_message(db, session_id, MessageCreate(role="human", content=message.content))
     if image_url:
         crud.add_message(db, session_id, MessageCreate(role="human", content=image_url))
@@ -135,16 +134,6 @@ async def chat_with_bot(
                         response_chunk = ChatResponseChunk(
                             type="message",
                             content=response_content
-                        ).model_dump_json()
-
-                elif "prediction" in node_output:
-                    final_nodes = ["HeartNode", "WoundNode", "ChestXRayNode"]
-                    if node_name in final_nodes:
-                        prediction_content = node_output["prediction"]
-                        final_ai_response += prediction_content
-                        response_chunk = ChatResponseChunk(
-                            type="prediction",
-                            content=prediction_content
                         ).model_dump_json()
 
                 if "rImageUrl" in node_output:
