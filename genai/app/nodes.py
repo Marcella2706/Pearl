@@ -9,12 +9,34 @@ from .prompts import brainXrayPrompt, clinicalPrompt
 import requests
 import uuid
 import rich
+from .prompts import woundPrompt,lungXrayPrompt
 
 def BrainXRayClinicalNode(state: ChatStateMain) -> ChatStateMain:
     prediction = state.get("prediction")
     pred_str = "" if prediction is None else str(prediction)
     system_message = SystemMessage(brainXrayPrompt.replace("{prediction}", pred_str))
     print("🧠 Brain X-Ray Clinical Node - Prediction:", prediction)
+    messages = state.get("messages") or []
+    all_messages = messages if len(messages) < 3 else messages[-3:]
+    response = openAi_Client.invoke([system_message] + all_messages)
+    return {"messages": AIMessage(response.content)}
+
+def WoundClinicalNode(state: ChatStateMain) -> ChatStateMain:
+    prediction = state.get("prediction")
+    pred_str = "" if prediction is None else str(prediction)
+    system_message = SystemMessage(woundPrompt.replace("{prediction}", pred_str))
+    print("🩺 Wound Clinical Node - Prediction:", prediction)
+    messages = state.get("messages") or []
+    all_messages = messages if len(messages) < 3 else messages[-3:]
+    response = openAi_Client.invoke([system_message] + all_messages)
+    return {"messages": AIMessage(response.content)}
+
+
+def ChestClinicalNode(state: ChatStateMain) -> ChatStateMain:
+    prediction = state.get("prediction")
+    pred_str = "" if prediction is None else str(prediction)
+    system_message = SystemMessage(lungXrayPrompt.replace("{prediction}", pred_str))
+    print("🫁 Chest X-Ray Clinical Node - Prediction:", prediction)
     messages = state.get("messages") or []
     all_messages = messages if len(messages) < 3 else messages[-3:]
     response = openAi_Client.invoke([system_message] + all_messages)
@@ -92,26 +114,38 @@ def ChestXRayNode(state: ChatStateMain) -> ChatStateMain:
     response = requests.get(image_url)
     response.raise_for_status()
     image_bytes = response.content
-    
-    destination_url = "http://127.0.0.1:5000/predict_lung"
+
+    destination_url = "https://kyanmahajan-lung-classifier.hf.space/predict_lung"
     files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
     response = requests.post(destination_url, files=files)
     response.raise_for_status()
     result = response.json()
+    print(result)
 
-    OBJECT_NAME = f"images/lung/{uuid.uuid4().hex}.jpg"
-    try:
-        s3Client.put_object(
-            Body=image_bytes, 
-            Bucket=BUCKET_NAME, 
-            Key=OBJECT_NAME, 
-            ContentType='image/jpeg'
-        )
-    except Exception as e:
-        rich.print(f"[red]S3 Upload Error: {e}[/red]")
-    
-    public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
-    return {"prediction": result.get("prediction"), "imageURL": public_url}
+    cam_image_url = None
+    if result.get("cam_image_url"):
+        try:
+            cam_url = "https://kyanmahajan-lung-classifier.hf.space" + result.get("cam_image_url")
+            cam_response = requests.get(cam_url)
+            cam_response.raise_for_status()
+            cam_image_bytes = cam_response.content
+            CAM_OBJECT_NAME = f"images/cam/{uuid.uuid4().hex}.jpg"
+            s3Client.put_object(
+                Body=cam_image_bytes,
+                Bucket=BUCKET_NAME,
+                Key=CAM_OBJECT_NAME,
+                ContentType='image/jpeg'
+            )
+            cam_image_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
+        except Exception as e:
+            rich.print(f"[red]CAM Image Upload Error: {e}[/red]")
+
+    print("✅ Chest X-Ray prediction:", result.get("prediction"))
+    print("✅ CAM Image URL:", cam_image_url)
+    return {
+        "prediction": result.get("prediction"),
+        "rImageUrl": cam_image_url
+    }
 
 def WoundNode(state: ChatStateMain) -> ChatStateMain:
     image_url = state.get("imageURL")
@@ -120,26 +154,36 @@ def WoundNode(state: ChatStateMain) -> ChatStateMain:
     response = requests.get(image_url)
     response.raise_for_status()
     image_bytes = response.content
-    
-    destination_url = "http://127.0.0.1:5000/predict_wound"
+
+    destination_url = "https://kyanmahajan-wound-classifier.hf.space/predict_wound"
     files = {'file': ('image.jpg', image_bytes, 'image/jpeg')}
     response = requests.post(destination_url, files=files)
     response.raise_for_status()
     result = response.json()
 
-    OBJECT_NAME = f"images/wound/{uuid.uuid4().hex}.jpg"
-    try:
-        s3Client.put_object(
-            Body=image_bytes, 
-            Bucket=BUCKET_NAME, 
-            Key=OBJECT_NAME, 
-            ContentType='image/jpeg'
-        )
-    except Exception as e:
-        rich.print(f"[red]S3 Upload Error: {e}[/red]")
-    
-    public_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{OBJECT_NAME}"
-    return {"prediction": result.get("prediction"), "imageURL": public_url}
+    cam_image_url = None
+    if result.get("cam_image_url"):
+        try:
+            cam_url = "https://kyanmahajan-wound-classifier.hf.space" + result.get("cam_image_url")
+            cam_response = requests.get(cam_url)
+            cam_response.raise_for_status()
+            cam_image_bytes = cam_response.content
+            CAM_OBJECT_NAME = f"images/cam/{uuid.uuid4().hex}.jpg"
+            s3Client.put_object(
+                Body=cam_image_bytes,
+                Bucket=BUCKET_NAME,
+                Key=CAM_OBJECT_NAME,
+                ContentType='image/jpeg'
+            )
+            cam_image_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
+        except Exception as e:
+            rich.print(f"[red]CAM Image Upload Error: {e}[/red]")
+
+    print("✅ Wound prediction:", result.get("prediction"))
+    return {
+        "prediction": result.get("prediction"),
+        "rImageUrl": cam_image_url
+    }
 
 def HeartNode(state: ChatStateMain) -> ChatStateMain:
     messages = state.get("messages", [])

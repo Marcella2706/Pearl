@@ -1,5 +1,6 @@
 from typing import Literal
 from .state import ChatStateMain
+from langgraph.graph import StateGraph, START, END
 
 def startRouter(state: ChatStateMain) -> Literal['xrayClassifierNode', 'HeartNode', 'clinicalNode']:
     imageUrl = state.get("imageURL")
@@ -15,9 +16,11 @@ def startRouter(state: ChatStateMain) -> Literal['xrayClassifierNode', 'HeartNod
         return "clinicalNode"
 
 
-def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode", "ChestXRayNode", "WoundNode"]:
+def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode", "ChestXRayNode", "WoundNode", END]:
     prediction = state.get("prediction")
     print("🔍 xrayClassifierNode prediction:", prediction)
+    if not prediction:
+        return "END"
     prediction = prediction.lower()
     if "brain" in prediction:
         return "BrainXRayNode"
@@ -25,5 +28,7 @@ def xrayClassifier(state: ChatStateMain) -> Literal["BrainXRayNode", "ChestXRayN
         return "ChestXRayNode"
     elif "wound" in prediction:
         return "WoundNode"
+    else:
+        return END
 
 
