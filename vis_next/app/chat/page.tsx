@@ -1,168 +1,403 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ChatLayout } from "../components/chatbox/Chat-Layout";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send, Stethoscope, Loader2 } from "lucide-react";
-import axios from "axios";
-import { getAuthToken } from "@/lib/auth-utils";
-import { Kbd } from "@/components/ui/kbd";
-const SUGGESTIONS = [
-  "What are symptoms of flu?",
-  "How to manage stress?",
-  "Tips for better sleep",
-  "Common cold remedies",
-];
+import { ChatLayout } from "@/app/components/chatbox/Chat-Layout"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import MessageComponent from "@/app/components/Common/MessageComponent"
+import { Send, Loader2, Stethoscope, Bot, HeartPulse, Image as ImageIcon, File as FileIcon, Paperclip } from "lucide-react"
+import { useParams } from "next/navigation"
+import { useState, useRef, useEffect } from "react"
+import axios from "axios"
+import { uploadImageToS3, UploadResult } from "@/lib/aws"
+import { Kbd } from "@/components/ui/kbd"
+import { getAuthToken } from "@/lib/auth-utils"
+import { HeartForm } from "./HeartForm"
 
-export default function ChatPage() {
-  const router = useRouter();
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const username = "User";
+interface StreamChunk {
+  type: "message" | "prediction" | "error" | "image"
+  content: string
+}
+
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+  timestamp: Date
+  isThinking?: boolean
+  imageUrl?: string
+  messageType?: "text" | "image" | "text_with_image"
+  isPrediction?: boolean
+}
+
+export default function ChatDetailPage() {
+  const params = useParams()
+  const chatId = params.id as string
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFetching, setIsFetching] = useState(true)
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | null>(null)
+
+  useEffect(() => {
+    const fetchChat = async () => {
+      if (!chatId) return
+      setIsFetching(true)
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/messages`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          }
+        )
+        const fetchedMessages: Message[] = response.data.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role === "human" ? "user" : "assistant",
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+        }))
+        setMessages(fetchedMessages)
+      } catch (error) {
+        console.error("Error fetching chat:", error)
+      } finally {
+        setIsFetching(false)
+      }
+    }
+    fetchChat()
+  }, [chatId])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  useEffect(() => {
+    if (selectedFiles && selectedFiles.length > 0) {
+      const firstFile = selectedFiles[0];
+      const isImage = firstFile.type.startsWith("image/");
+      if (isImage) {
+        setSelectedTag("xray");
+      } else {
+        setSelectedTag(null);
+      }
+    } else {
+      setSelectedTag(null);
+    }
+  }, [selectedFiles]);
+  
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`, 
-      {},
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`,
-        },
-      }
-      );
-      const data = await response.data;
-      if (data.id) {
-        const messageResponse = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${data.id}/chat`, 
-        {
-          content: message,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
-          },
+    if (!input.trim() && (!selectedFiles || selectedFiles.length === 0)) return
+    let imageUrl = ""
+    if (selectedFiles && selectedFiles.length > 0) {
+      const file = selectedFiles[0]
+      try {
+        const uploadResult: UploadResult = await uploadImageToS3(file)
+        if (uploadResult.success && uploadResult.url) {
+          imageUrl = uploadResult.url
+        } else {
+          console.error("Image upload failed:", uploadResult.error)
+          return
         }
-        );
-        const messageData = await messageResponse.data;
-        router.push(`/chat/${data.chatId}`);
+      } catch (error) {
+        console.error("Error uploading image:", error)
+        return
       }
+    }
+    let messageType: "text" | "image" | "text_with_image" = "text"
+    if (imageUrl && input.trim()) messageType = "text_with_image"
+    else if (imageUrl) messageType = "image"
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+      timestamp: new Date(),
+      imageUrl: imageUrl || undefined,
+      messageType,
+    }
+    setMessages((prev) => [...prev, userMessage])
+    setInput("")
+    setSelectedFiles(null)
+    setSelectedTag(null)
+    setIsLoading(true)
+    const assistantId = (Date.now() + 1).toString()
+    const assistantMessage: Message = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+      isThinking: true,
+    }
+    setMessages((prev) => [...prev, assistantMessage])
+    try {
+      const requestBody: any = { content: userMessage.content }
+      if (imageUrl) requestBody.imageURL = imageUrl
+      if (selectedTag === "heart") requestBody.tag = "heart"
+      else if (selectedTag === "xray") requestBody.tag = "xray"
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      )
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      if (!response.body) throw new Error("No response body")
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let partialData = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        partialData += decoder.decode(value, { stream: true })
+        const lines = partialData.split("\n")
+        partialData = lines.pop() || ""
+        for (const line of lines) {
+          if (!line.trim()) continue
+          try {
+            const chunk: StreamChunk = JSON.parse(line)
+            if (chunk.type === "message" || chunk.type === "prediction") {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId
+                    ? {
+                        ...msg,
+                        content: msg.content + chunk.content,
+                        isThinking: false,
+                        isPrediction: chunk.type === "prediction" ? true : msg.isPrediction,
+                      }
+                    : msg
+                )
+              )
+            } else if (chunk.type === "image") {
+              const imgMessage: Message = {
+                id: (Date.now() + Math.random()).toString(),
+                role: "assistant",
+                content: "",
+                timestamp: new Date(),
+                imageUrl: chunk.content,
+                messageType: "image",
+                isThinking: false,
+              }
+              setMessages((prev) => [...prev, imgMessage])
+            } else if (chunk.type === "error") {
+              if (chunk.content !== "the connection is closed") {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantId
+                      ? {
+                          ...msg,
+                          content: msg.content + `\n\n[ERROR: ${chunk.content}]`,
+                          isThinking: false,
+                        }
+                      : msg
+                  )
+                )
+              }
+            }
+          } catch (e) {
+            console.error("Error parsing stream chunk:", line, e)
+          }
+        }
+      }
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId && msg.isThinking ? { ...msg, isThinking: false } : msg
+        )
+      )
     } catch (error) {
-      console.error("Error creating chat:", error);
+      console.error("Error sending message:", error)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId
+            ? { ...msg, content: "Sorry, an error occurred. Please try again.", isThinking: false }
+            : msg
+        )
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
+      setSelectedTag(null)
     }
-  };
-  interface ChangeEvent {
-    target: HTMLTextAreaElement;
   }
 
-  interface FilesChangeHandler {
-    (files: FileList | null): void;
+  const handleFilesChange = (files: FileList | null) => setSelectedFiles(files)
+
+  const handleRemoveFile = (index: number) => {
+    if (!selectedFiles) return
+    const arr = Array.from(selectedFiles)
+    arr.splice(index, 1)
+    const dataTransfer = new DataTransfer()
+    arr.forEach((f) => dataTransfer.items.add(f))
+    setSelectedFiles(dataTransfer.files)
+    if (arr.length === 0) setSelectedTag(null)
   }
 
-  interface RemoveFileHandler {
-    (index: number): void;
-  }
-
-  interface KeyDownEvent {
-    key: string;
-    shiftKey: boolean;
-    preventDefault: () => void;
-  }
-
-  const handleChange: (e: ChangeEvent) => void = (e) =>
-    setMessage(e.target.value);
-
-  const handleFilesChange: FilesChangeHandler = (files) =>
-    setSelectedFiles(files);
-
-  const handleRemoveFile: RemoveFileHandler = (index) => {
-    if (!selectedFiles) return;
-    const arr = Array.from(selectedFiles);
-    arr.splice(index, 1);
-    const dataTransfer = new DataTransfer();
-    arr.forEach((f) => dataTransfer.items.add(f));
-    setSelectedFiles(dataTransfer.files);
-  };
-
-  const handleKeyDown = (e: KeyDownEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const handleTagClick = (tag: "heart" | "xray") => {
+    if (selectedTag === tag) {
+      setSelectedTag(null)
+      if (tag === "xray") setSelectedFiles(null)
+      return
     }
-  };
+    setSelectedTag(tag)
+    if (tag === "heart") setSelectedFiles(null)
+    else if (tag === "xray" && fileInputRef.current) fileInputRef.current.click()
+  }
 
-  const handleSuggestionClick = (suggestion: string) => setMessage(suggestion);
+  const handleHeartSubmit = (prompt: string) => {
+    setInput(prompt)
+    setSelectedTag(null)
+  }
+
+  if (isFetching)
+    return (
+      <ChatLayout>
+        <div className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="animate-spin text-accent" size={32} />
+            <p className="text-foreground-muted text-sm">Loading conversation...</p>
+          </div>
+        </div>
+      </ChatLayout>
+    )
 
   return (
     <ChatLayout>
-      <div className="flex flex-col h-full bg-background">
-        <div className="p-4 md:p-6 shrink-0">
+      <div className="flex flex-col h-full bg-background text-foreground">
+        <div className="p-4 md:p-6 shrink-0 bg-background backdrop-blur border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
+            <div className="p-2 bg-foreground/10 rounded-lg">
               <Stethoscope className="text-primary" size={24} />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">
-                JIVIKA
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Your AI Doctor Assistant
-              </p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">JIVIKA</h1>
+              <p className="text-sm text-foreground-muted">Doctor AI Assistant</p>
             </div>
           </div>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
-          <div className="w-full max-w-2xl space-y-8">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl md:text-4xl font-bold text-primary">
-                Hello, {username}
-              </h2>
-              <p className="text-base md:text-lg text-muted-foreground">
-                How can I help you today?
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-background">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-foreground-muted">
+              <div className="p-4 bg-foreground/10 rounded-full mb-4">
+                <Bot className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Start a conversation</h3>
+              <p className="text-center max-w-md">
+                Ask JIVIKA any health-related questions and get AI-powered medical assistance.
               </p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {SUGGESTIONS.map((s, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSuggestionClick(s)}
-                  className="p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent transition-all text-left group"
-                >
-                  <p className="text-foreground group-hover:text-primary transition-colors text-sm md:text-base">
-                    {s}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
+          ) : (
+            messages.map((message) => <MessageComponent key={message.id} message={message} />)
+          )}
+          <div ref={messagesEndRef} />
         </div>
-        <div className=" p-4 md:p-6 bg-background shrink-0">
-          <div className="max-w-2xl mx-auto flex flex-col gap-2">
-            <div className="flex">
+        <div className="p-4 md:p-6 bg-background backdrop-blur shrink-0">
+          <div className="max-w-4xl mx-auto flex flex-col gap-3">
+            {selectedFiles && selectedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-3 mb-2">
+                {Array.from(selectedFiles).map((file, index) => {
+                  const isImage = file.type.startsWith("image/")
+                  const isPDF = file.type === "application/pdf"
+                  return (
+                    <div
+                      key={index}
+                      className="relative w-20 h-20 border rounded-lg overflow-hidden group flex items-center justify-center bg-foreground/5"
+                    >
+                      {isImage && (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="object-cover w-full h-full"
+                        />
+                      )}
+                      {isPDF && (
+                        <div className="flex flex-col items-center justify-center text-center p-2">
+                          <FileIcon className="w-6 h-6 text-red-600 mb-1" />
+                          <p className="text-[10px] text-foreground-muted font-medium truncate max-w-[4rem]">
+                            {file.name}
+                          </p>
+                        </div>
+                      )}
+                      {!isImage && !isPDF && (
+                        <div className="flex flex-col items-center justify-center text-center p-2">
+                          <FileIcon className="w-6 h-6 text-muted-foreground mb-1" />
+                          <p className="text-[10px] text-foreground-muted font-medium truncate max-w-[4rem]">
+                            {file.name}
+                          </p>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleRemoveFile(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[20px] leading-none opacity-80 hover:opacity-100 transition"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              multiple
+              ref={fileInputRef}
+              className="hidden"
+              onChange={(e) => {
+                const files = e.target.files
+                if (files && files.length > 0) setSelectedFiles(files)
+              }}
+            />
+            <div className="flex items-end relative">
               <Textarea
-                value={message}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask me anything about your health..."
-                className="min-h-20 resize-none"
+                ref={(el) => {
+                  if (el) {
+                    el.style.height = "auto"
+                    el.style.height = `${el.scrollHeight}px`
+                  }
+                }}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value)
+                  const el = e.target
+                  el.style.height = "auto"
+                  el.style.height = `${el.scrollHeight}px`
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSendMessage()
+                  }
+                }}
+                placeholder="Ask JIVIKA anything..."
+                className="min-h-20 max-h-60 resize-none pr-20 overflow-y-auto transition-all"
                 disabled={isLoading}
-                selectedFiles={selectedFiles}
-                onFilesChange={handleFilesChange}
-                onRemoveFile={handleRemoveFile}
               />
               <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="absolute right-12 bottom-2"
+                title="Attach File"
+              >
+                <Paperclip className="w-5 h-5" />
+              </Button>
+              <Button
                 onClick={handleSendMessage}
-                disabled={!message.trim() || isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground mb-5 ml-2 px-4 md:px-4 self-end"
+                disabled={
+                  (!input.trim() && (!selectedFiles || selectedFiles.length === 0)) || isLoading
+                }
+                className="bg-accent hover:bg-accent-hover text-background ml-2 px-4 md:px-4 self-end mb-1"
                 size="icon"
               >
                 {isLoading ? (
@@ -172,42 +407,43 @@ export default function ChatPage() {
                 )}
               </Button>
             </div>
-
-            {/* File input and selected files list (separate from Textarea to avoid passing unknown props)
-            <div className="flex items-center justify-between gap-4 mt-2">
-              <input
-                type="file"
-                multiple
-                onChange={(e) => handleFilesChange((e.target as HTMLInputElement).files)}
-                className="text-sm text-muted-foreground"
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={selectedTag === "heart" ? "default" : "outline"}
+                onClick={() => handleTagClick("heart")}
+                className="flex items-center gap-1 text-xs px-3 py-1 rounded-full"
                 disabled={isLoading}
-              />
-              <div className="flex-1">
-                {selectedFiles && selectedFiles.length > 0 && (
-                  <ul className="flex gap-2 overflow-x-auto mt-1">
-                    {Array.from(selectedFiles).map((f, idx) => (
-                      <li key={idx} className="bg-card border border-border px-2 py-1 rounded text-xs text-foreground flex items-center gap-2">
-                        <span className="truncate max-w-[200px]">{f.name}</span>
-                        <button
-                          onClick={() => handleRemoveFile(idx)}
-                          className="text-xs text-destructive hover:underline"
-                          type="button"
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div> */}
-
-            <p className="text-xs text-muted-foreground mt-1">
+              >
+                <HeartPulse className="w-4 h-4" /> Heart
+              </Button>
+              <Button
+                size="sm"
+                variant={selectedTag === "xray" ? "default" : "outline"}
+                onClick={() => handleTagClick("xray")}
+                className="flex items-center gap-1 text-xs px-3 py-1 rounded-full"
+                disabled={isLoading}
+              >
+                <ImageIcon className="w-4 h-4" /> X-ray / Wound Image
+              </Button>
+            </div>
+            <p className="text-xs text-foreground-muted mt-1">
               Press <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd> for new line
             </p>
           </div>
         </div>
       </div>
+      {selectedTag === "heart" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <HeartForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleHeartSubmit}
+            />
+          </div>
+        </div>
+      )}
     </ChatLayout>
-  );
+  )
 }

@@ -102,9 +102,17 @@ async def chat_with_bot(
     if image_url:
         crud.add_message(db, session_id, MessageCreate(role="human", content=image_url))
 
-    invocation_input = {"messages": [HumanMessage(content=message.content)]}
-    if image_url:
-        invocation_input["imageURL"] = image_url
+    invocation_input = {
+    "messages": [HumanMessage(content=message.content)],
+    "request": message.content
+}
+
+    if message.imageURL:
+        invocation_input["imageURL"] = message.imageURL
+
+    if message.tag:
+        invocation_input["tag"] = message.tag
+
 
     config = {"configurable": {"thread_id": thread_id}}
 
@@ -140,12 +148,12 @@ async def chat_with_bot(
                 elif "prediction" in node_output:
                     final_nodes = ["HeartNode", "WoundNode", "ChestXRayNode"]
                     if node_name in final_nodes:
-                        prediction_content = node_output["prediction"]
-                        final_ai_response += prediction_content
+                        prediction_content = str(node_output["prediction"]) 
                         response_chunk = ChatResponseChunk(
                             type="prediction",
                             content=prediction_content
                         ).model_dump_json()
+
 
                 if "rImageUrl" in node_output:
                     r_img = node_output["rImageUrl"]
