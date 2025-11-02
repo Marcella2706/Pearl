@@ -66,7 +66,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setStatus('Finding hospitals near you...');
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/places/nearby-osm?lat=${lat}&lng=${lng}&radius=3000&keyword=hospital`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/v1/places/nearby-osm?lat=${lat}&lng=${lng}&radius=3000&keyword=hospital`
       );
 
       if (!res.ok) throw new Error('Failed to fetch places from backend');

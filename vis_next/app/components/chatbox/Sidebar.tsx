@@ -57,7 +57,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch(`http://localhost:2706/api/v1/user/current-user`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/user/current-user`, {
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
         },

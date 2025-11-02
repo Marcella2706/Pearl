@@ -46,7 +46,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function googleAuth(token: string) {
     try {
-      const response = await axios.post(`http://localhost:2706/api/v1/auth/google`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`, {
         token
       }, {
         headers: {
@@ -75,9 +75,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   async function sendOTP(email: string) {
     const otp = generateOTP();
     localStorage.setItem("currentOtp", otp);
-    const message = `Your OTP is ${otp}. Thank You For Registering With MarcelPearl`;
+    const message = `Your OTP is ${otp}. Thank You For Registering With Jivika`;
 
-    const response = await axios.post(`http://localhost:2706/api/v1/auth/otpVerification`, {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/otpVerification`, {
       email,
       otp: message,
     }, {
@@ -94,7 +94,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   async function signUp(email: string, password: string, name: string) {
-    const response = await axios.post(`http://localhost:2706/api/v1/auth/signup`, {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
       name,
       email,
       password
@@ -112,7 +112,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function signIn(email: string, password: string): Promise<boolean> {
     try {
-      const response = await axios.post(`http://localhost:2706/api/v1/auth/signin`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signin`, {
         email,
         password,
       }, {
@@ -138,7 +138,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const response = await axios.post(
-      `http://localhost:2706/api/v1/auth/reset-password`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/reset-password`,
       {
         email,
         newPassword,

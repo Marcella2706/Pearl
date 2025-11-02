@@ -67,7 +67,7 @@ export function EditProfileModal({ open, onClose, currentUser, onProfileUpdated 
         setUploadingImage(false)
       }
 
-      const res = await fetch(`http://localhost:2706/api/v1/user/update-profile`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v1/user/update-profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
