@@ -1,4 +1,5 @@
 import json
+import os
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage, AIMessage,SystemMessage
@@ -14,7 +15,8 @@ from app.db import get_db, SessionLocal
 from app import crud, models
 from app.clients import openAi_Client
 
-BACKEND_URL = "http://localhost:2706/api/v1/user/current-user"
+# Use environment variable for backend URL, defaulting to Docker service name
+BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:2706/api/v1/user/current-user")
 
 def get_current_user(authorization: str = Header(None)) -> dict:
     if not authorization:
@@ -92,10 +94,7 @@ async def chat_with_bot(
 
     user_msg_lower = message.content.lower()
     image_url = message.imageURL
-
-    if not image_url:
-        if "brain xray" in user_msg_lower:
-            image_url = TEST_IMAGE_URLS["brain"]
+    print("🚦 Chat Endpoint - message:", message.content, "imageURL:", image_url)
 
     crud.add_message(db, session_id, MessageCreate(role="human", content=message.content))
     if image_url:
@@ -103,15 +102,16 @@ async def chat_with_bot(
 
     invocation_input = {
     "messages": [HumanMessage(content=message.content)],
-    "request": message.content
+    "request": message.tag
 }
 
     if message.imageURL:
         invocation_input["imageURL"] = message.imageURL
-
-    if message.tag:
-        invocation_input["tag"] = message.tag
-
+    if not message.tag:
+        invocation_input["request"] = "None"
+    if not message.imageURL:
+        invocation_input["imageURL"] = ""
+    print("🚦 Invocation Input:", invocation_input)
 
     config = {"configurable": {"thread_id": thread_id}}
 

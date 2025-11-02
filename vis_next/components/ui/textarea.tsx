@@ -9,11 +9,13 @@ export interface TextareaProps
   onFilesChange?: (files: FileList) => void
   selectedFiles?: FileList | null
   onRemoveFile?: (index: number) => void
+  fileInputRef?: React.RefObject<HTMLInputElement | null>
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, onFilesChange, selectedFiles, onRemoveFile, ...props }, ref) => {
-    const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  ({ className, onFilesChange, selectedFiles, onRemoveFile, fileInputRef: externalFileInputRef, ...props }, ref) => {
+    const internalFileInputRef = React.useRef<HTMLInputElement | null>(null)
+    const fileInputRef = externalFileInputRef || internalFileInputRef
 
     const handleFileButtonClick = () => {
       fileInputRef.current?.click()

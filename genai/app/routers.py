@@ -4,12 +4,13 @@ from langgraph.graph import StateGraph, START, END
 
 def startRouter(state: ChatStateMain) -> Literal['xrayClassifierNode', 'HeartNode', 'clinicalNode']:
     imageUrl = state.get("imageURL")
-    tag = (state.get("tag") or "").lower()
-    request = (state.get("request") or "").lower()
-
-    if imageUrl or tag == "xray":
+    request = state.get("request")
+    if(request):
+        request = request.lower()
+    print("🚦 Start Router - imageURL:", imageUrl, "request:", request)
+    if imageUrl or "xray" in request:
         return "xrayClassifierNode"
-    elif tag == "heart" or "heart" in request:
+    elif "heart" in request:
         return "HeartNode"
     else:
         return "clinicalNode"
