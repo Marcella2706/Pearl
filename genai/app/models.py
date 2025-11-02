@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, Text, TIMESTAMP, DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, String, Text, TIMESTAMP, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -32,4 +32,9 @@ class User(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=True)
+    password_hash = Column(String, nullable=False)
+    profile_pic = Column("profile_pic", String, nullable=True)
+    is_active = Column("is_active", Boolean, default=True, nullable=False)
+    created_at = Column("created_at", DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column("updated_at", DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
     sessions = relationship("Session", back_populates="user")

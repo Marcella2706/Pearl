@@ -101,9 +101,17 @@ async def chat_with_bot(
     if image_url:
         crud.add_message(db, session_id, MessageCreate(role="human", content=image_url))
 
-    invocation_input = {"messages": [HumanMessage(content=message.content)]}
-    if image_url:
-        invocation_input["imageURL"] = image_url
+    invocation_input = {
+    "messages": [HumanMessage(content=message.content)],
+    "request": message.content
+}
+
+    if message.imageURL:
+        invocation_input["imageURL"] = message.imageURL
+
+    if message.tag:
+        invocation_input["tag"] = message.tag
+
 
     config = {"configurable": {"thread_id": thread_id}}
 
@@ -135,7 +143,6 @@ async def chat_with_bot(
                             type="message",
                             content=response_content
                         ).model_dump_json()
-
                 if "rImageUrl" in node_output:
                     r_img = node_output["rImageUrl"]
                     urls = r_img if isinstance(r_img, list) else [r_img]

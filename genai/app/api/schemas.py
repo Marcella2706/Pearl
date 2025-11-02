@@ -31,6 +31,7 @@ class ChatRequest(BaseModel):
     """What the user sends to the chat endpoint."""
     content: str
     imageURL: Optional[str] = None
+    tag: Optional[str] = None
 
 class ChatResponseChunk(BaseModel):
     """A single chunk of the streaming response."""
