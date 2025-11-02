@@ -48,7 +48,7 @@ export default function ChatPage() {
         }
     setIsLoading(true);
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`, 
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`, 
       {},
       {
         headers: {

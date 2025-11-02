@@ -18,7 +18,7 @@ export default function ProfilePage() {
     
     useEffect(() => {
       const fetchUser = async () => {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/v1/user/current-user`, {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/v1/user/current-user`, {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
         },
