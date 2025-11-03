@@ -79,7 +79,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
         const token = getAuthToken()
 
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`,
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -117,7 +117,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
   const isActive = (href: string) => pathname === href
 
   const handleNewChat = () => { 
-    let response=axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions`,
+    let response=axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
     {},
     {
       headers: {

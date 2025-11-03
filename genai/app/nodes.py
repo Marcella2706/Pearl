@@ -3,7 +3,7 @@ import uuid
 import requests
 from langchain_core.messages import SystemMessage, AIMessage
 from .state import ChatStateMain
-from .clients import openAi_Client, s3Client, BUCKET_NAME, REGION, rich
+from .clients import openAi_Client, s3Client, AWS_DEFAULT_REGION, BUCKET_NAME, rich , REGION
 from .prompts import (
     brainXrayPrompt, clinicalPrompt, heartPrompt,
     woundPrompt, lungXrayPrompt
@@ -118,7 +118,7 @@ def BrainXrayNode(state: ChatStateMain) -> ChatStateMain:
                 Key=CAM_OBJECT_NAME,
                 ContentType="image/jpeg"
             )
-            cam_image_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
+            cam_image_url = f"https://{BUCKET_NAME}.s3.{AWS_DEFAULT_REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
         except Exception as e:
             rich.print(f"[red]CAM Image Upload Error: {e}[/red]")
 
@@ -154,7 +154,7 @@ def ChestXRayNode(state: ChatStateMain) -> ChatStateMain:
                 Key=CAM_OBJECT_NAME,
                 ContentType="image/jpeg"
             )
-            cam_image_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
+            cam_image_url = f"https://{BUCKET_NAME}.s3.{AWS_DEFAULT_REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
         except Exception as e:
             rich.print(f"[red]CAM Image Upload Error: {e}[/red]")
 
@@ -190,7 +190,7 @@ def WoundNode(state: ChatStateMain) -> ChatStateMain:
                 Key=CAM_OBJECT_NAME,
                 ContentType="image/jpeg"
             )
-            cam_image_url = f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
+            cam_image_url = f"https://{BUCKET_NAME}.s3.{AWS_DEFAULT_REGION}.amazonaws.com/{CAM_OBJECT_NAME}"
         except Exception as e:
             rich.print(f"[red]CAM Image Upload Error: {e}[/red]")
 
