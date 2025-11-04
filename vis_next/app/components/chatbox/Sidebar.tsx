@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   MapPin,
+  Pencil,
+  Trash2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -28,6 +30,7 @@ import {
 import axios from "axios"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { removeAuthToken, getAuthToken } from "@/lib/auth-utils"
+import ConfirmModal from "./ConfirmModal"
 
 interface ChatItem {
   id: string
@@ -47,6 +50,11 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
   const [user, setUser] = useState<any>(null)
+  const [showRenameModal, setShowRenameModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null)
+  const [newTitle, setNewTitle] = useState("")
+
 
   // Notify parent when collapse state changes
   useEffect(() => {
@@ -139,6 +147,66 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
     removeAuthToken()
     window.location.href = "/auth" 
   }
+
+  const handleOpenRename = (chat: ChatItem) => {
+    setSelectedChat(chat)
+    setNewTitle(chat.title)
+    setShowRenameModal(true)
+  }
+  
+  const handleOpenDelete = (chat: ChatItem) => {
+    setSelectedChat(chat)
+    setShowDeleteModal(true)
+  }
+  
+  const confirmRename = async () => {
+    if (!selectedChat) return
+    try {
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${selectedChat.id}`,
+        { title: newTitle },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      )
+      setChats((prev) => {
+        const updated = prev.map((c) =>
+          c.id === selectedChat.id ? { ...c, title: newTitle } : c
+      )
+        return updated.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      })
+      
+    } catch (error) {
+      console.error("Error updating title:", error)
+    } finally {
+      setShowRenameModal(false)
+    }
+  }
+  
+  const confirmDelete = async () => {
+    if (!selectedChat) return
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${selectedChat.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      )
+      setChats((prev) => prev.filter((c) => c.id !== selectedChat.id))
+    } catch (error) {
+      console.error("Error deleting chat:", error)
+    } finally {
+      setShowDeleteModal(false)
+    }
+  }
+  
+
   if (isMobile) {
     return (
       <>
@@ -216,7 +284,27 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                             size={16}
                             className="shrink-0 text-sidebar-primary"
                           />
-                          <span className="truncate">{chat.title}</span>
+                          <span className="truncate max-w-[135px]">{chat.title}</span>
+                          <span
+  onClick={(e) => {
+    e.preventDefault()
+    handleOpenRename(chat)
+  }}
+  className="cursor-pointer text-muted-foreground hover:text-primary"
+  title="Rename Chat"
+>
+  <Pencil size={12} />
+</span>
+<span
+  onClick={(e) => {
+    e.preventDefault()
+    handleOpenDelete(chat)
+  }}
+  className="cursor-pointer text-muted-foreground hover:text-red-500"
+  title="Delete Chat"
+>
+  <Trash2 size={12} />
+</span>
                         </div>
                       </button>
                     </Link>
@@ -265,6 +353,26 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             </DropdownMenu>
           </div>
         </aside>
+        <ConfirmModal
+  open={showRenameModal}
+  onOpenChange={setShowRenameModal}
+  title="Rename Chat"
+  description="Enter a new title for this chat."
+  confirmLabel="Save"
+  showInput
+  inputValue={newTitle}
+  onInputChange={setNewTitle}
+  onConfirm={confirmRename}
+/>
+
+<ConfirmModal
+  open={showDeleteModal}
+  onOpenChange={setShowDeleteModal}
+  title="Delete Chat?"
+  description="This action cannot be undone."
+  confirmLabel="Delete"
+  onConfirm={confirmDelete}
+/>
 
         {isOpen && (
           <div
@@ -367,6 +475,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
   }
 
   return (
+    <>
     <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
       <div className="p-4 flex items-center justify-between">
         <div>
@@ -413,38 +522,63 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           </p>
         </div>
         <ScrollArea className="flex-1">
-          <div className="px-2 space-y-1">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin text-muted-foreground" size={20} />
+  <div className="px-2 space-y-1">
+    {isLoading ? (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="animate-spin text-muted-foreground" size={20} />
+      </div>
+    ) : chats.length === 0 ? (
+      <p className="text-xs text-muted-foreground px-2 py-4 text-center">
+        No chats yet
+      </p>
+    ) : (
+      chats.map((chat) => (
+        <Link key={chat.id} href={`/chat/${chat.id}`}>
+          <button
+            className={`group w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
+              isActive(`/chat/${chat.id}`)
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground hover:bg-sidebar-accent"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare
+                size={16}
+                className="shrink-0 text-sidebar-primary"
+              />
+              <span className="truncate max-w-[135px]">{chat.title}</span>
+
+              <div className="flex items-center gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+              <span
+  onClick={(e) => {
+    e.preventDefault()
+    handleOpenRename(chat)
+  }}
+  className="cursor-pointer text-muted-foreground hover:text-primary"
+  title="Rename Chat"
+>
+  <Pencil size={12} />
+</span>
+<span
+  onClick={(e) => {
+    e.preventDefault()
+    handleOpenDelete(chat)
+  }}
+  className="cursor-pointer text-muted-foreground hover:text-red-500"
+  title="Delete Chat"
+>
+  <Trash2 size={12} />
+</span>
+
               </div>
-            ) : chats.length === 0 ? (
-              <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-                No chats yet
-              </p>
-            ) : (
-              chats.map((chat) => (
-                <Link key={chat.id} href={`/chat/${chat.id}`}>
-                  <button
-                    className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
-                      isActive(`/chat/${chat.id}`)
-                        ? "bg-sidebar-accent text-sidebar-primary"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <MessageSquare
-                        size={16}
-                        className="shrink-0 text-sidebar-primary"
-                      />
-                      <span className="truncate">{chat.title}</span>
-                    </div>
-                  </button>
-                </Link>
-              ))
-            )}
-          </div>
-        </ScrollArea>
+            </div>
+          </button>
+        </Link>
+      ))
+    )}
+  </div>
+</ScrollArea>
+
       </div>
 
       <div className="p-4 border-t border-sidebar-border space-y-2">
@@ -486,5 +620,26 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
         </DropdownMenu>
       </div>
     </aside>
+    <ConfirmModal
+    open={showRenameModal}
+    onOpenChange={setShowRenameModal}
+    title="Rename Chat"
+    description="Enter a new title for this chat."
+    confirmLabel="Save"
+    showInput
+    inputValue={newTitle}
+    onInputChange={setNewTitle}
+    onConfirm={confirmRename}
+  />
+  
+  <ConfirmModal
+    open={showDeleteModal}
+    onOpenChange={setShowDeleteModal}
+    title="Delete Chat?"
+    description="This action cannot be undone."
+    confirmLabel="Delete"
+    onConfirm={confirmDelete}
+  />
+  </>
   )
-}
+} 
