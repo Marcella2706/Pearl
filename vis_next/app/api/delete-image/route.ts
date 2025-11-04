@@ -3,7 +3,9 @@ import AWS from 'aws-sdk';
 
 // Configure AWS SDK on server-side
 const s3Client = new AWS.S3({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION || 'ap-south-1',
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
 });
 
 const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'your-bucket-name';
