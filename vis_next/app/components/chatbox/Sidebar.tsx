@@ -258,6 +258,15 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                 Explore News
               </Button>
             </Link>
+            <Link href="/doctors" className="w-full">
+              <Button
+                variant="default"
+                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+              >
+                <User size={20} />
+                View Doctors
+              </Button>
+            </Link>
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
