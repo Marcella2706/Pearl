@@ -63,8 +63,8 @@ export default function AuthRoleSelectPage() {
 
           <div className="flex flex-col gap-4 mt-6">
             {[
-              { label: "Sign in as User", icon: <User className="w-5 h-5" />, path: "/auth/user" },
-              { label: "Sign in as Doctor", icon: <Stethoscope className="w-5 h-5" />, path: "/auth/doctor" },
+              { label: "Sign in as User", icon: <User className="w-5 h-5 text-primary" />, path: "/auth/user" },
+              { label: "Sign in as Doctor", icon: <Stethoscope className="w-5 h-5 text-primary" />, path: "/auth/doctor" },
             ].map(({ label, icon, path }) => (
               <motion.div
                 key={label}
@@ -74,7 +74,7 @@ export default function AuthRoleSelectPage() {
               >
                 <Button
                   variant="outline"
-                  className="w-full border border-border text-foreground font-medium rounded-lg py-6 text-base hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 flex items-center justify-center gap-3"
+                  className="w-full border border-border text-foreground font-medium rounded-lg py-6 text-base hover:bg-primary hover:text-primary/80 hover:border-primary transition-all duration-300 flex items-center justify-center gap-3"
                   onClick={() => router.push(path)}
                 >
                   {icon}
