@@ -43,8 +43,7 @@ public class Users implements UserDetails {
     private boolean isActive = true;
 
     @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String role;
 
     @Column(name = "hospital")
     private String hospital;
@@ -61,7 +60,10 @@ public class Users implements UserDetails {
     private List<Session> sessions;
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Appointment> appointments;
+    private List<Appointment> doctorAppointments;
+
+    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appointment> patientAppointments;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

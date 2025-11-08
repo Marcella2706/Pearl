@@ -1,5 +1,5 @@
 # Multi-stage build for smaller final image
-FROM openjdk:17-jdk-slim AS builder
+FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn .mvn

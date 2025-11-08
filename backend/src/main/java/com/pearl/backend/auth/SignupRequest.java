@@ -1,6 +1,5 @@
 package com.pearl.backend.auth;
 
-import com.pearl.backend.entities.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +13,6 @@ public class SignupRequest {
     private String email;
     private String password;
     private String name;
+    private String role;
     private String hospital;
-    private Role role;
 }

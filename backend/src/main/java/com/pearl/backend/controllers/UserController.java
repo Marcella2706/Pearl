@@ -24,12 +24,20 @@ public class UserController {
     public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
         try {
             Users user = getUser(authentication);
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
             UserResponse response = UserResponse.builder()
                     .name(user.getName())
                     .email(user.getEmail())
                     .profilePhoto(user.getProfilePhoto())
+                    .role(user.getRole())
+                    .hospital(user.getHospital())
                     .build();
+
             return ResponseEntity.ok(response);
+
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
