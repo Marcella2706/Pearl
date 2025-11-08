@@ -31,9 +31,12 @@ public class AuthService {
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .name(request.getName())
+                .role(request.getRole())
+                .hospital(request.getHospital() != null && !request.getHospital().isBlank()
+                        ? request.getHospital()
+                        : null)
                 .isActive(true)
                 .build();
-
         userRepository.save(user);
 
         String token = jwtService.generateToken(user.getEmail());

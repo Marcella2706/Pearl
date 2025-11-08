@@ -20,14 +20,15 @@ public class Appointment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String patientName;
+    private String description;
 
     private LocalDateTime appointmentTime;
 
-    private String description;
+    @ManyToOne
+    @JoinColumn(name = "doctor_id", nullable = false)
+    private Users doctor;
 
     @ManyToOne
-    @JoinColumn(name = "doctor_id")
-    private Users doctor;
+    @JoinColumn(name = "patient_id", nullable = false)
+    private Users patient;
 }
-

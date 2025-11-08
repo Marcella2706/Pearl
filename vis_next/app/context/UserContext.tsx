@@ -19,7 +19,12 @@ interface UserContextType {
   generateOTP: () => string;
   sendOTP: (email: string) => Promise<string>;
   changePassword: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    options?: { role?: "USER" | "DOCTOR"; hospital?: string }
+  ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<Boolean>;
   logout: () => void;
 }
@@ -97,36 +102,39 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     email: string,
     password: string,
     name: string,
-    role: "USER" | "DOCTOR" = "USER",
-    hospital?: string
+    options?: { role?: "USER" | "DOCTOR"; hospital?: string }
   ) {
+    console.log("entered")
+    const role = options?.role || "USER";
+    const hospital = options?.hospital || null;
+  
+    console.log("%c[SignUp] Payload being sent →", "color: #00BFFF; font-weight: bold;");
+    console.table({ email, password, name, role, hospital });
+  
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
-        email,
-        password,
-        name,
-        role,
-        hospital: hospital || null,
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      console.log("Backend URL:", process.env.NEXT_PUBLIC_BACKEND_URL);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`,
+        { email, password, name, role, hospital },
+        { headers: { "Content-Type": "application/json" } }
+      );
+  
+      console.log("%c[SignUp] Response received →", "color: #32CD32; font-weight: bold;");
+      console.log(response.data);
   
       const responseData = response.data;
   
       if (responseData.token) {
+        console.log("%c[SignUp] Token received:", "color: #FFD700;");
+        console.log(responseData.token);
         setAuthToken(responseData.token);
       }
-  
-      return responseData;
     } catch (error: any) {
-      console.error("Signup failed:", error.response?.data || error.message);
+      console.error("%c[SignUp] Signup failed:", "color: red; font-weight: bold;");
+      console.error(error.response?.data || error.message);
       throw new Error(error.response?.data?.message || "Signup failed");
     }
-  }
-  
-  
+  } 
 
   async function signIn(email: string, password: string): Promise<boolean> {
     try {

@@ -71,67 +71,53 @@ export default function AuthPage() {
       }, timeout);
     });
   }
-  const onSubmit = async (data: { email?: string; password?: string; name?: string; confirmPassword?: string }) => {
+  const onSubmit = async (data: { email?: string; password?: string; name?: string; hospital?: string; confirmPassword?: string }) => {
     console.log("Form Data:", data);
+  
     if (isForgotPassword) {
       const email = data.email;
       const password = data.password;
-      if(password!=data.confirmPassword) throw new Error(`The passwords don't match`);
+      if (password !== data.confirmPassword) throw new Error(`The passwords don't match`);
       setIsOtpPage(true);
-
+  
       const response = await sendOTP(email as string);
-      if (!response) {
-        throw new Error('Failed to send OTP');
-      }
-
+      if (!response) throw new Error('Failed to send OTP');
+  
       await waitForOtpVerification();
-
-      console.log("Changing Password");
       await changePassword(email as string, password as string);
-
       localStorage.removeItem("currentOtp");
       reset();
       redirect("/");
     }
-
+  
     if (isSignUp) {
-      const email = data.email;
-      const password = data.password;
-      const name = data.name;
-
-      if (data.password !== data.confirmPassword) {
+      const { email, password, name } = data;
+      
+      if (password !== data.confirmPassword) {
         return setError("confirmPassword", {
           type: "manual",
           message: "Passwords do not match",
         });
       }
-
+    
       setIsOtpPage(true);
-      const response = await sendOTP(email as string);
-      if (!response) {
-        throw new Error('Failed to send OTP')
-      }
-
+    
+      sendOTP(email as string)
+        .then(() => console.log("OTP sent successfully"))
+        .catch(err => console.error("Failed to send OTP:", err));
+    
       await waitForOtpVerification();
-
       localStorage.removeItem("currentOtp");
-
-
-      await signUp(email as string, password as string, name as string)
-      router.push(redirectPath);
-    }
-
+  
+      await signUp(email as string, password as string, name as string, { role: "USER" });
+    } 
     else {
-      const email = data.email;
-      const password = data.password;
-      const success = await signIn(email as string, password as string);
-      if (success) {
-        router.push(redirectPath);
-      } else {
-        console.error("Sign-in failed. No redirect.");
-  }
-    }
+      const email=data.email;
+      const password=data.password;
+      signIn(email as string,password as string)
+      }
     reset();
+    redirect("/");
   };
 
   const googlelogin = useGoogleLogin({
