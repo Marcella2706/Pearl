@@ -14,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -60,6 +61,48 @@ public class AppointmentController {
                 a.getDescription(),
                 a.getStatus()
         )).toList();
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/appointments/{id}/status")
+    public ResponseEntity<AppointmentDto> updateAppointmentStatus(
+            @PathVariable("id") String appointmentId,
+            @RequestParam("status") String status
+    ) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!(principal instanceof Users currentUser)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        Appointment appointment = appointmentRepository.findById(UUID.fromString(appointmentId))
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (!appointment.getDoctor().getId().equals(currentUser.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        appointment.setStatus(status);
+        appointmentRepository.save(appointment);
+
+        AppointmentDto result = new AppointmentDto(
+                appointment.getId().toString(),
+                new UserDto(
+                        appointment.getDoctor().getId().toString(),
+                        appointment.getDoctor().getName(),
+                        appointment.getDoctor().getHospital(),
+                        appointment.getDoctor().getProfilePhoto()
+                ),
+                new UserDto(
+                        appointment.getPatient().getId().toString(),
+                        appointment.getPatient().getName(),
+                        null,
+                        appointment.getPatient().getProfilePhoto()
+                ),
+                appointment.getAppointmentTime(),
+                appointment.getDescription(),
+                appointment.getStatus()
+        );
 
         return ResponseEntity.ok(result);
     }

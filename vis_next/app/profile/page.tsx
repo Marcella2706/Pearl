@@ -185,6 +185,8 @@ export default function ProfilePage() {
                       </div>
                     )}
 
+                    
+
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                         <Calendar className="text-primary" size={20} />

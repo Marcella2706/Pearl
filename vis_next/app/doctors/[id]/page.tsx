@@ -137,7 +137,6 @@ export default function DoctorBookingPage() {
 
       <main className="min-h-screen bg-linear-to-br from-background via-primary/5 to-background p-4 md:p-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Doctor Info */}
           <GlassCard className="md:col-span-1 text-center">
             {doctor.profilePhoto ? (
               <img
@@ -203,7 +202,6 @@ export default function DoctorBookingPage() {
                 />
               </div>
 
-              {/* Phone */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   Phone Number
@@ -221,7 +219,6 @@ export default function DoctorBookingPage() {
                 </div>
               </div>
 
-              {/* Problem */}
               <div>
                 <label className="block text-sm font-semibold mb-2">
                   Problem Description
@@ -237,7 +234,6 @@ export default function DoctorBookingPage() {
                 />
               </div>
 
-              {/* Date + Time */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold mb-2">
@@ -247,7 +243,7 @@ export default function DoctorBookingPage() {
                     type="date"
                     name="date"
                     value={formData.date}
-                    min={new Date().toISOString().split("T")[0]} // ✅ block past dates
+                    min={new Date().toISOString().split("T")[0]} 
                     onChange={handleChange}
                     required
                     className="w-full glass-sm px-4 py-3 focus:ring-2 focus:ring-primary/50"

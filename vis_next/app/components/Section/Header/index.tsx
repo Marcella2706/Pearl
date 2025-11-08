@@ -58,14 +58,12 @@ const Header = () => {
               <ThemeSwitcher />
 
               {isLoggedIn ? (
-                <div 
+                <button
                   onClick={() => router.push('/chat')}
-                  className="cursor-pointer"
+                  className="bg-primary text-background font-semibold px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
                 >
-                  <AnimatedLink 
-                    title="Chat" 
-                  />
-                </div>
+                  Chat
+                </button>
               ) : (
                 <div 
                   onClick={() => router.push('/auth')}
@@ -75,6 +73,7 @@ const Header = () => {
                   <GetStartedButton padding={'8px 16px'} />
                 </div>
               )}
+
             </div>
           </>
         )}
