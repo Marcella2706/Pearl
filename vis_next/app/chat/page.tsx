@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChatLayout } from "../components/chatbox/Chat-Layout";
 import { Button } from "@/components/ui/button";
@@ -48,61 +48,71 @@ export default function ChatPage() {
   const username = "User";
   const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
-    if (!message.trim() && (!selectedFiles || selectedFiles.length === 0)) return
-    
-        let imageUrl = "";
-        if (selectedFiles && selectedFiles.length > 0) {
-          const file = selectedFiles[0]; 
-          try {
-            const uploadResult: UploadResult = await uploadImageToS3(file);
-            if (uploadResult.success && uploadResult.url) {
-              imageUrl = uploadResult.url;
-            } else {
-              console.error("Image upload failed:", uploadResult.error);
-              return;
-            }
-          } catch (error) {
-            console.error("Error uploading image:", error);
-            return;
-          }
-        }
+    if (!message.trim() && (!selectedFiles || selectedFiles.length === 0)) return;
+  
     setIsLoading(true);
+  
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`, 
-      {},
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getAuthToken()}`,
-        },
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        const sessionRes = await axios.post(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
+          { title: "New Chat" },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          }
+        );
+        const sessionData = sessionRes.data;
+        activeSessionId = sessionData.id;
+        setSessionId(sessionData.id);
+        console.log("Session created:", sessionData.id);
       }
-      );
-      const data = await response.data;
-      if (data.id) {
-        const requestBody: any = { content: message }
-        if (imageUrl) requestBody.imageURL = imageUrl
-        if (selectedTag === "heart") requestBody.tag = "heart"
-        else if (selectedTag === "xray") requestBody.tag = "xray"
-        const messageResponse = await axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${data.id}/chat`, requestBody,
+  
+      let imageUrl = "";
+      if (selectedFiles && selectedFiles.length > 0) {
+        const file = selectedFiles[0];
+        const uploadResult: UploadResult = await uploadImageToS3(file);
+        if (uploadResult.success && uploadResult.url) {
+          imageUrl = uploadResult.url;
+        } else {
+          console.error("Image upload failed:", uploadResult.error);
+          return;
+        }
+      }
+  
+      const requestBody: any = { content: message };
+      if (imageUrl) requestBody.imageURL = imageUrl;
+      if (selectedTag) requestBody.tag = selectedTag;
+  
+      const messageResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${activeSessionId}/chat`,
+        requestBody,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getAuthToken()}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
           },
-          
         }
-        );
-        const messageData = await messageResponse.data;
-        router.push(`/chat/${data.chatId}`);
-      }
+      );
+  
+      console.log("💬 Message sent:", messageResponse.data);
+  
+      router.push(`/chat/${activeSessionId}`);
     } catch (error) {
-      console.error("Error creating chat:", error);
+      console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
+
   interface ChangeEvent {
     target: HTMLTextAreaElement;
   }

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { User, Mail, Calendar, MapPin, Car, Clock, Stethoscope, Hospital  } from "lucide-react"
+import { User, Mail, Calendar, MapPin, Clock, Stethoscope, Hospital } from "lucide-react"
 import { ChatLayout } from "../components/chatbox/Chat-Layout"
 import ThemeSwitcher from "../components/Common/ThemeSwitcher"
 import { EditProfileModal } from "./editProfile"
@@ -12,19 +12,19 @@ import { getAuthToken } from "@/lib/auth-utils"
 import { MapDisplay } from "../explore/_components/maps"
 
 interface Appointment {
-  id: string;
+  id: string
   doctor: {
-    id: string;
-    name: string;
-    hospital?: string;
-  };
+    id: string
+    name: string
+    hospital?: string
+  }
   patient: {
-    id: string;
-    name: string;
-  };
-  appointmentDate: string;
-  description: string;
-  status?: string;
+    id: string
+    name: string
+  }
+  appointmentTime: string
+  description: string
+  status?: string
 }
 
 export default function ProfilePage() {
@@ -32,22 +32,25 @@ export default function ProfilePage() {
   const [editOpen, setEditOpen] = useState(false)
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loadingAppointments, setLoadingAppointments] = useState(true)
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null)
 
-    const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
-    
-    useEffect(() => {
-      const fetchUser = async () => {
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/user/current-user`, {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
-        },
-      })
-      if (res.ok) {
-        const data = await res.json()
-        console.log("Fetched user:", data)
-        setUser(data)
-      } else {
-        console.error("Failed to fetch user:", res.status)
+          },
+        })
+        if (res.ok) {
+          const data = await res.json()
+          console.log("Fetched user:", data)
+          setUser(data)
+        } else {
+          console.error("Failed to fetch user:", res.status)
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err)
       }
     }
     fetchUser()
@@ -55,47 +58,40 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const loadAppointments = async () => {
-      if (!user?.id) {
-        setLoadingAppointments(false);
-        return;
-      }
-
+      if (!user) return
       try {
-        const endpoint = user.role === "DOCTOR" 
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/appointments/doctors/${user.id}/appointments`
-          : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/appointments/users/${user.id}/appointments`;
-
-        const response = await fetch(endpoint, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/me/appointments`, {
           headers: {
             Authorization: `Bearer ${getAuthToken()}`,
           },
-        });
+        })
 
         if (response.ok) {
-          const data = await response.json();
-          setAppointments(data);
+          const data = await response.json()
+          setAppointments(data)
         } else {
-          console.error("Failed to fetch appointments:", response.status);
-          setAppointments([]);
+          console.error("Failed to fetch appointments:", response.status)
+          setAppointments([])
         }
       } catch (error) {
-        console.error("Error loading appointments:", error);
-        setAppointments([]);
+        console.error("Error loading appointments:", error)
+        setAppointments([])
       } finally {
-        setLoadingAppointments(false);
+        setLoadingAppointments(false)
       }
-    };
+    }
 
-    loadAppointments();
-  }, [user]);
+    if (user) loadAppointments()
+  }, [user])
 
+  // ✅ Get user location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCurrentLocation({
             lat: position.coords.latitude,
-            lng: position.coords.longitude
+            lng: position.coords.longitude,
           })
         },
         (error) => {
@@ -118,17 +114,15 @@ export default function ProfilePage() {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString)
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
-  };
-
-
+    })
+  }
 
   return (
     <ChatLayout>
@@ -144,6 +138,7 @@ export default function ProfilePage() {
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-4xl mx-auto space-y-8">
+            {/* 🧍 Profile Card */}
             <Card className="bg-card border-border p-8 rounded-3xl shadow-2xl">
               <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
                 <div className="shrink-0">
@@ -161,7 +156,7 @@ export default function ProfilePage() {
                       {user?.name || "Unnamed User"}
                     </h1>
                   </div>
-                  
+
                   <h3 className="text-lg font-medium text-muted-foreground mb-4">
                     {user?.role === "DOCTOR" ? "Doctor" : "Patient"}
                   </h3>
@@ -186,13 +181,11 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <label className="text-xs text-muted-foreground uppercase tracking-wide">Hospital</label>
-                          <p className="text-foreground font-medium text-base">
-                            {user.hospital}
-                          </p>
+                          <p className="text-foreground font-medium text-base">{user.hospital}</p>
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-primary/10 rounded-lg shrink-0">
                         <Calendar className="text-primary" size={20} />
@@ -215,23 +208,21 @@ export default function ProfilePage() {
                     >
                       Edit Profile
                     </Button>
-                    
-                    <div className="flex items-center space-x-8">
 
-                    </div>
+                    <div className="flex items-center space-x-8"></div>
                   </div>
                 </div>
               </div>
-              <div className="mb-6">
+
+              <div className="mb-6 mt-8">
                 <h2 className="text-2xl font-bold text-foreground mb-2">Your Location</h2>
                 <p className="text-base text-muted-foreground">Current location for healthcare services</p>
               </div>
-              
-    
+
               <div className="relative w-full h-64 bg-muted rounded-lg overflow-hidden shadow-inner flex items-center justify-center border border-border mb-6">
                 {currentLocation ? (
-                 <div className="w-full h-full">
-                    <MapDisplay></MapDisplay>
+                  <div className="w-full h-full">
+                    <MapDisplay />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center">
@@ -242,18 +233,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex items-center space-x-8">
-                
                 <div className="ml-auto">
                   <ThemeSwitcher />
                 </div>
               </div>
             </Card>
 
-            {/* Appointments Section */}
+            {/* 🗓️ Appointments Section */}
             <Card className="bg-card border-border p-8 rounded-3xl shadow-2xl relative overflow-hidden">
-              {/* Decorative gradient background */}
-              <div className="absolute inset-0 bg-card pointer-events-none" />
-              
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-primary/20 rounded-2xl">
@@ -264,8 +251,8 @@ export default function ProfilePage() {
                       {user?.role === "DOCTOR" ? "Patient Appointments" : "My Appointments"}
                     </h2>
                     <p className="text-base text-muted-foreground">
-                      {user?.role === "DOCTOR" 
-                        ? "View all your patient appointments" 
+                      {user?.role === "DOCTOR"
+                        ? "View all your patient appointments"
                         : "View all your scheduled appointments"}
                     </p>
                   </div>
@@ -282,41 +269,40 @@ export default function ProfilePage() {
                         key={appointment.id}
                         className="bg-background border-border hover:shadow-lg hover:border-primary/50 transition-all duration-300 relative overflow-hidden group"
                       >
-                        {/* Subtle gradient on hover */}
-                        <div className="absolute inset-0 bg-linear-to-r from-primary/0 via-primary/5 to-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                        
                         <CardHeader className="relative z-10">
                           <div className="flex justify-between items-start">
                             <div className="flex items-start gap-4">
-                              {/* Doctor Icon */}
                               <div className="p-3 bg-primary/10 rounded-xl shrink-0 group-hover:bg-primary/20 transition-colors">
                                 <Stethoscope className="text-primary" size={24} />
                               </div>
                               <div>
-                                <CardTitle className="text-xl text-foreground flex items-center gap-2">
-                                  {user?.role === "DOCTOR" 
-                                    ? appointment.patient.name 
-                                    : appointment.doctor.name}
-                                  <span className="text-xs font-normal text-muted-foreground">
-                                    #{index + 1}
-                                  </span>
-                                </CardTitle>
+                              <CardTitle className="text-xl text-foreground flex items-center gap-2">
+                                {user?.role === "DOCTOR"
+                                  ? appointment.patient?.name || "Unknown Patient"
+                                  : appointment.doctor?.name || "Unknown Doctor"}
+                                <span className="text-xs font-normal text-muted-foreground">
+                                  #{index + 1}
+                                </span>
+                              </CardTitle>
+
                                 <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                                   <MapPin size={14} />
-                                  {user?.role === "DOCTOR" 
-                                    ? (user.hospital || "Hospital") 
-                                    : (appointment.doctor.hospital || "Hospital")}
+                                  {user?.role === "DOCTOR"
+                                    ? user.hospital || "Hospital"
+                                    : appointment.doctor?.hospital || "Hospital"}
+
                                 </p>
                               </div>
                             </div>
-                            <Badge 
-                              variant="outline" 
+                            <Badge
+                              variant="outline"
                               className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
                             >
                               {appointment.status || "Pending Confirmation"}
                             </Badge>
                           </div>
                         </CardHeader>
+
                         <CardContent className="space-y-3 relative z-10">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
@@ -328,7 +314,7 @@ export default function ProfilePage() {
                                   Appointment Date
                                 </p>
                                 <p className="text-foreground font-medium">
-                                  {formatDate(appointment.appointmentDate)}
+                                  {formatDate(appointment.appointmentTime)}
                                 </p>
                               </div>
                             </div>
@@ -340,9 +326,7 @@ export default function ProfilePage() {
                                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                                   {user?.role === "DOCTOR" ? "Patient Details" : "Issue"}
                                 </p>
-                                <p className="text-foreground">
-                                  {appointment.description}
-                                </p>
+                                <p className="text-foreground">{appointment.description}</p>
                               </div>
                             </div>
                           </div>

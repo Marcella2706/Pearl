@@ -1,4 +1,4 @@
-package com.pearl.backend.appointment;
+package com.pearl.backend.medical;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

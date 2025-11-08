@@ -1,8 +1,9 @@
 package com.pearl.backend.controllers;
 
-import com.pearl.backend.appointment.AppointmentRequest;
+import com.pearl.backend.medical.AppointmentRequest;
 import com.pearl.backend.entities.Appointment;
 import com.pearl.backend.entities.Users;
+import com.pearl.backend.medical.DoctorDTO;
 import com.pearl.backend.repositories.AppointmentRepository;
 import com.pearl.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,16 @@ public class AppointmentController {
     private final AppointmentRepository appointmentRepository;
 
     @GetMapping("/doctors")
-    public ResponseEntity<List<Users>> getAllDoctors() {
-        List<Users> doctors = userRepository.findByRole("DOCTOR");
+    public ResponseEntity<List<DoctorDTO>> getAllDoctors() {
+        List<DoctorDTO> doctors = userRepository.findByRole("DOCTOR").stream()
+                .map(user -> new DoctorDTO(
+                        user.getId(),
+                        user.getName(),
+                        user.getHospital(),
+                        user.getRole(),
+                        user.getProfilePhoto()
+                ))
+                .toList();
         return ResponseEntity.ok(doctors);
     }
 
