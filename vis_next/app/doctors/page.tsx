@@ -102,7 +102,7 @@ if (loading) {
               Explore
             </Link>
             <Link
-              href="/appointments"
+              href="/doctors"
               className="text-sm font-medium text-primary hover:text-primary transition-colors"
             >
               Doctors
@@ -155,7 +155,7 @@ if (loading) {
               Explore
             </Link>
             <Link
-              href="/appointments"
+              href="/doctors"
               className="text-sm font-medium text-primary hover:text-primary transition-colors"
             >
               Doctors
@@ -236,7 +236,7 @@ if (loading) {
       <footer className="mt-16 border-t border-border bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-sm text-foreground-muted">
-            © 2025 Jivika News. All rights reserved.
+            © 2025 Jivika Health. All rights reserved.
           </span>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/chat" className="hover:text-primary transition-colors">

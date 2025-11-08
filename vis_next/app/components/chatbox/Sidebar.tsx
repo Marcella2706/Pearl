@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   Plus,
@@ -18,74 +18,76 @@ import {
   Pencil,
   Trash2,
   Newspaper,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import axios from "axios"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { removeAuthToken, getAuthToken } from "@/lib/auth-utils"
-import ConfirmModal from "./ConfirmModal"
+} from "@/components/ui/dropdown-menu";
+import axios from "axios";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { removeAuthToken, getAuthToken } from "@/lib/auth-utils";
+import ConfirmModal from "./ConfirmModal";
 
 interface ChatItem {
-  id: string
-  title: string
-  createdAt: string
+  id: string;
+  title: string;
+  createdAt: string;
 }
 
 interface SidebarProps {
-  isMobile: boolean
-  onCollapseChange?: (isCollapsed: boolean) => void
+  isMobile: boolean;
+  onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
-  const [chats, setChats] = useState<ChatItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
-  const [showRenameModal, setShowRenameModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null)
-  const [newTitle, setNewTitle] = useState("")
-
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const pathname = usePathname();
+  const [user, setUser] = useState<any>(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null);
+  const [newTitle, setNewTitle] = useState("");
 
   // Notify parent when collapse state changes
   useEffect(() => {
     if (onCollapseChange) {
-      onCollapseChange(isCollapsed)
+      onCollapseChange(isCollapsed);
     }
-  }, [isCollapsed, onCollapseChange])
+  }, [isCollapsed, onCollapseChange]);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/user/current-user`, {
-        headers: {
-          Authorization: `Bearer ${getAuthToken()}`,
-        },
-      })
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/user/current-user`,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
       if (res.ok) {
-        const data = await res.json()
-        console.log("Fetched user:", data)
-        setUser(data)
+        const data = await res.json();
+        console.log("Fetched user:", data);
+        setUser(data);
       } else {
-        console.error("Failed to fetch user:", res.status)
+        console.error("Failed to fetch user:", res.status);
       }
-    }
-    fetchUser()
-  }, [])
+    };
+    fetchUser();
+  }, []);
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        setIsLoading(true)
-        const token = getAuthToken()
+        setIsLoading(true);
+        const token = getAuthToken();
 
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
@@ -95,73 +97,76 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
               ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
           }
-        )
+        );
 
-        const data = response.data
+        const data = response.data;
 
-   
-        const sessions = Array.isArray(data) ? data : data?.chats || []
+        const sessions = Array.isArray(data) ? data : data?.chats || [];
 
         const normalized: ChatItem[] = sessions.map((s: any) => ({
           id: s.id,
           title: s.title || "Untitled",
-        
-          createdAt: s.created_at ?? s.createdAt ?? "",
-        }))
 
-        setChats(normalized)
+          createdAt: s.created_at ?? s.createdAt ?? "",
+        }));
+
+        setChats(normalized);
       } catch (error) {
-        console.error("Error fetching chats:", error)
+        console.error("Error fetching chats:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    fetchChats()
-  }, [])
+    };
+    fetchChats();
+  }, []);
 
   useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
+    setIsOpen(false);
+  }, [pathname]);
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => pathname === href;
 
-  const handleNewChat = () => { 
-    let response=axios.post(`${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
-    {},
-    {
-      headers: {
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${getAuthToken()}`,
-      },
-    }
-    ).then((res)=>{
-      const data=res.data;
-      if(data.id){
-        window.location.href=`/chat/${data.id}`;
-      }
-    }).catch((error)=>{
-      console.error("Error creating new chat:",error);
-    });
-  }
+  const handleNewChat = () => {
+    let response = axios
+      .post(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      )
+      .then((res) => {
+        const data = res.data;
+        if (data.id) {
+          window.location.href = `/chat/${data.id}`;
+        }
+      })
+      .catch((error) => {
+        console.error("Error creating new chat:", error);
+      });
+  };
 
   const handleLogout = () => {
-    removeAuthToken()
-    window.location.href = "/auth" 
-  }
+    removeAuthToken();
+    window.location.href = "/auth";
+  };
 
   const handleOpenRename = (chat: ChatItem) => {
-    setSelectedChat(chat)
-    setNewTitle(chat.title)
-    setShowRenameModal(true)
-  }
-  
+    setSelectedChat(chat);
+    setNewTitle(chat.title);
+    setShowRenameModal(true);
+  };
+
   const handleOpenDelete = (chat: ChatItem) => {
-    setSelectedChat(chat)
-    setShowDeleteModal(true)
-  }
-  
+    setSelectedChat(chat);
+    setShowDeleteModal(true);
+  };
+
   const confirmRename = async () => {
-    if (!selectedChat) return
+    if (!selectedChat) return;
     try {
       await axios.patch(
         `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${selectedChat.id}`,
@@ -172,23 +177,25 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             Authorization: `Bearer ${getAuthToken()}`,
           },
         }
-      )
+      );
       setChats((prev) => {
         const updated = prev.map((c) =>
           c.id === selectedChat.id ? { ...c, title: newTitle } : c
-      )
-        return updated.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-      })
-      
+        );
+        return updated.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
     } catch (error) {
-      console.error("Error updating title:", error)
+      console.error("Error updating title:", error);
     } finally {
-      setShowRenameModal(false)
+      setShowRenameModal(false);
     }
-  }
-  
+  };
+
   const confirmDelete = async () => {
-    if (!selectedChat) return
+    if (!selectedChat) return;
     try {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${selectedChat.id}`,
@@ -198,15 +205,14 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             Authorization: `Bearer ${getAuthToken()}`,
           },
         }
-      )
-      setChats((prev) => prev.filter((c) => c.id !== selectedChat.id))
+      );
+      setChats((prev) => prev.filter((c) => c.id !== selectedChat.id));
     } catch (error) {
-      console.error("Error deleting chat:", error)
+      console.error("Error deleting chat:", error);
     } finally {
-      setShowDeleteModal(false)
+      setShowDeleteModal(false);
     }
-  }
-  
+  };
 
   if (isMobile) {
     return (
@@ -239,7 +245,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                 New Chat
               </Button>
             </Link>
-            
+
             <Link href="/explore" className="w-full">
               <Button
                 variant="default"
@@ -303,27 +309,29 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                             size={16}
                             className="shrink-0 text-sidebar-primary"
                           />
-                          <span className="truncate max-w-[135px]">{chat.title}</span>
+                          <span className="truncate max-w-[135px]">
+                            {chat.title}
+                          </span>
                           <span
-  onClick={(e) => {
-    e.preventDefault()
-    handleOpenRename(chat)
-  }}
-  className="cursor-pointer text-muted-foreground hover:text-primary"
-  title="Rename Chat"
->
-  <Pencil size={12} />
-</span>
-<span
-  onClick={(e) => {
-    e.preventDefault()
-    handleOpenDelete(chat)
-  }}
-  className="cursor-pointer text-muted-foreground hover:text-red-500"
-  title="Delete Chat"
->
-  <Trash2 size={12} />
-</span>
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenRename(chat);
+                            }}
+                            className="cursor-pointer text-muted-foreground hover:text-primary"
+                            title="Rename Chat"
+                          >
+                            <Pencil size={12} />
+                          </span>
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenDelete(chat);
+                            }}
+                            className="cursor-pointer text-muted-foreground hover:text-red-500"
+                            title="Delete Chat"
+                          >
+                            <Trash2 size={12} />
+                          </span>
                         </div>
                       </button>
                     </Link>
@@ -358,13 +366,19 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem asChild>
-                  <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <User size={16} />
                     View Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
+                >
                   <LogOut size={16} />
                   Logout
                 </DropdownMenuItem>
@@ -373,25 +387,25 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           </div>
         </aside>
         <ConfirmModal
-  open={showRenameModal}
-  onOpenChange={setShowRenameModal}
-  title="Rename Chat"
-  description="Enter a new title for this chat."
-  confirmLabel="Save"
-  showInput
-  inputValue={newTitle}
-  onInputChange={setNewTitle}
-  onConfirm={confirmRename}
-/>
+          open={showRenameModal}
+          onOpenChange={setShowRenameModal}
+          title="Rename Chat"
+          description="Enter a new title for this chat."
+          confirmLabel="Save"
+          showInput
+          inputValue={newTitle}
+          onInputChange={setNewTitle}
+          onConfirm={confirmRename}
+        />
 
-<ConfirmModal
-  open={showDeleteModal}
-  onOpenChange={setShowDeleteModal}
-  title="Delete Chat?"
-  description="This action cannot be undone."
-  confirmLabel="Delete"
-  onConfirm={confirmDelete}
-/>
+        <ConfirmModal
+          open={showDeleteModal}
+          onOpenChange={setShowDeleteModal}
+          title="Delete Chat?"
+          description="This action cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={confirmDelete}
+        />
 
         {isOpen && (
           <div
@@ -401,7 +415,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           />
         )}
       </>
-    )
+    );
   }
 
   if (isCollapsed && !isMobile) {
@@ -427,7 +441,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           >
             <Plus size={20} />
           </Button>
-          
+
           <Link href="/explore">
             <Button
               variant="default"
@@ -437,7 +451,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
               <MapPin size={20} />
             </Button>
           </Link>
-          
+
           <Link href="/news">
             <Button
               variant="default"
@@ -445,6 +459,15 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
               className="h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground"
             >
               <Newspaper size={20} />
+            </Button>
+          </Link>
+          <Link href="/doctors" className="w-full">
+            <Button
+              variant="default"
+              className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+            >
+              <User size={20} />
+              View Doctors
             </Button>
           </Link>
         </div>
@@ -485,13 +508,19 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="right" className="w-56">
               <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <User size={16} />
                   View Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
+              >
                 <LogOut size={16} />
                 Logout
               </DropdownMenuItem>
@@ -499,184 +528,202 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           </DropdownMenu>
         </div>
       </aside>
-    )
+    );
   }
 
   return (
     <>
-    <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
-      <div className="p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-sidebar-primary">JIVIKA</h1>
-          <p className="text-xs text-muted-foreground">Doctor AI Assistant</p>
+      <aside className="h-full flex flex-col bg-sidebar text-sidebar-foreground">
+        <div className="p-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-sidebar-primary">JIVIKA</h1>
+            <p className="text-xs text-muted-foreground">Doctor AI Assistant</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(true)}
+            className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+          >
+            <ChevronLeft size={16} />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(true)}
-          className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          <ChevronLeft size={16} />
-        </Button>
-      </div>
 
-      <div className="p-4 border-b border-sidebar-border space-y-3">
-        <Link href="/chat" className="w-full">
-          <Button
-            variant="default"
-            className="w-full justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground"
-            onClick={handleNewChat}
-          >
-            <Plus size={20} />
-            New Chat
-          </Button>
-        </Link>
-        
-        <Link href="/explore" className="w-full">
-          <Button
-            variant="default"
-            className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
-          >
-            <MapPin size={20} />
-            Explore Hospitals
-          </Button>
-        </Link>
-         <Link href="/news" className="w-full">
-          <Button
-            variant="default"
-            className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
-          >
-            <Newspaper size={20} />
-            Explore News
-          </Button>
-        </Link>
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="px-4 py-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Chat History
-          </p>
-        </div>
-        <ScrollArea className="flex-1">
-  <div className="px-2 space-y-1">
-    {isLoading ? (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="animate-spin text-muted-foreground" size={20} />
-      </div>
-    ) : chats.length === 0 ? (
-      <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-        No chats yet
-      </p>
-    ) : (
-      chats.map((chat) => (
-        <Link key={chat.id} href={`/chat/${chat.id}`}>
-          <button
-            className={`group w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
-              isActive(`/chat/${chat.id}`)
-                ? "bg-sidebar-accent text-sidebar-primary"
-                : "text-sidebar-foreground hover:bg-sidebar-accent"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <MessageSquare
-                size={16}
-                className="shrink-0 text-sidebar-primary"
-              />
-              <span className="truncate max-w-[135px]">{chat.title}</span>
-
-              <div className="flex items-center gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-              <span
-  onClick={(e) => {
-    e.preventDefault()
-    handleOpenRename(chat)
-  }}
-  className="cursor-pointer text-muted-foreground hover:text-primary"
-  title="Rename Chat"
->
-  <Pencil size={12} />
-</span>
-<span
-  onClick={(e) => {
-    e.preventDefault()
-    handleOpenDelete(chat)
-  }}
-  className="cursor-pointer text-muted-foreground hover:text-red-500"
-  title="Delete Chat"
->
-  <Trash2 size={12} />
-</span>
-
-              </div>
-            </div>
-          </button>
-        </Link>
-      ))
-    )}
-  </div>
-</ScrollArea>
-
-      </div>
-
-      <div className="p-4 border-t border-sidebar-border space-y-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+        <div className="p-4 border-b border-sidebar-border space-y-3">
+          <Link href="/chat" className="w-full">
             <Button
-              variant="ghost"
-              className="w-full justify-between gap-3 text-sidebar-foreground hover:bg-sidebar-accent"
+              variant="default"
+              className="w-full justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground"
+              onClick={handleNewChat}
             >
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 border border-border">
-                  <AvatarImage src={user?.profilePhoto} alt={user?.name} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {user?.name?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium truncate max-w-[120px]">
-                    {user?.name || "Unnamed User"}
-                  </span>
-                </div>
-              </div>
-              <ChevronUp size={16} className="shrink-0" />
+              <Plus size={20} />
+              New Chat
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem asChild>
-              <Link href="/profile" className="flex items-center gap-2 cursor-pointer">
-                <User size={16} />
-                View Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700">
-              <LogOut size={16} />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </aside>
-    <ConfirmModal
-    open={showRenameModal}
-    onOpenChange={setShowRenameModal}
-    title="Rename Chat"
-    description="Enter a new title for this chat."
-    confirmLabel="Save"
-    showInput
-    inputValue={newTitle}
-    onInputChange={setNewTitle}
-    onConfirm={confirmRename}
-  />
-  
-  <ConfirmModal
-    open={showDeleteModal}
-    onOpenChange={setShowDeleteModal}
-    title="Delete Chat?"
-    description="This action cannot be undone."
-    confirmLabel="Delete"
-    onConfirm={confirmDelete}
-  />
-  </>
-  )
-} 
+          </Link>
+
+          <Link href="/explore" className="w-full">
+            <Button
+              variant="default"
+              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+            >
+              <MapPin size={20} />
+              Explore Hospitals
+            </Button>
+          </Link>
+          <Link href="/news" className="w-full">
+            <Button
+              variant="default"
+              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+            >
+              <Newspaper size={20} />
+              Explore News
+            </Button>
+          </Link>
+          <Link href="/doctors" className="w-full">
+            <Button
+              variant="default"
+              className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+            >
+              <User size={20} />
+              View Doctors
+            </Button>
+          </Link>
+        </div>
+
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-4 py-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Chat History
+            </p>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="px-2 space-y-1">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2
+                    className="animate-spin text-muted-foreground"
+                    size={20}
+                  />
+                </div>
+              ) : chats.length === 0 ? (
+                <p className="text-xs text-muted-foreground px-2 py-4 text-center">
+                  No chats yet
+                </p>
+              ) : (
+                chats.map((chat) => (
+                  <Link key={chat.id} href={`/chat/${chat.id}`}>
+                    <button
+                      className={`group w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate ${
+                        isActive(`/chat/${chat.id}`)
+                          ? "bg-sidebar-accent text-sidebar-primary"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MessageSquare
+                          size={16}
+                          className="shrink-0 text-sidebar-primary"
+                        />
+                        <span className="truncate max-w-[135px]">
+                          {chat.title}
+                        </span>
+
+                        <div className="flex items-center gap-2 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenRename(chat);
+                            }}
+                            className="cursor-pointer text-muted-foreground hover:text-primary"
+                            title="Rename Chat"
+                          >
+                            <Pencil size={12} />
+                          </span>
+                          <span
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleOpenDelete(chat);
+                            }}
+                            className="cursor-pointer text-muted-foreground hover:text-red-500"
+                            title="Delete Chat"
+                          >
+                            <Trash2 size={12} />
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  </Link>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+
+        <div className="p-4 border-t border-sidebar-border space-y-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="w-full justify-between gap-3 text-sidebar-foreground hover:bg-sidebar-accent"
+              >
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border border-border">
+                    <AvatarImage src={user?.profilePhoto} alt={user?.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {user?.name?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium truncate max-w-[120px]">
+                      {user?.name || "Unnamed User"}
+                    </span>
+                  </div>
+                </div>
+                <ChevronUp size={16} className="shrink-0" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <User size={16} />
+                  View Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="flex items-center gap-2 cursor-pointer text-red-600 hover:text-red-700"
+              >
+                <LogOut size={16} />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
+      <ConfirmModal
+        open={showRenameModal}
+        onOpenChange={setShowRenameModal}
+        title="Rename Chat"
+        description="Enter a new title for this chat."
+        confirmLabel="Save"
+        showInput
+        inputValue={newTitle}
+        onInputChange={setNewTitle}
+        onConfirm={confirmRename}
+      />
+
+      <ConfirmModal
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
+        title="Delete Chat?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+      />
+    </>
+  );
+}
