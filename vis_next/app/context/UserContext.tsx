@@ -93,22 +93,40 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return "OTP sent to email";
   }
 
-  async function signUp(email: string, password: string, name: string) {
-    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
-      name,
-      email,
-      password
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const responseData = await response.data;
-    if (responseData.token) {
-      setAuthToken(responseData.token);
+  async function signUp(
+    email: string,
+    password: string,
+    name: string,
+    role: "USER" | "DOCTOR" = "USER",
+    hospital?: string
+  ) {
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`, {
+        email,
+        password,
+        name,
+        role,
+        hospital: hospital || null,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      const responseData = response.data;
+  
+      if (responseData.token) {
+        setAuthToken(responseData.token);
+      }
+  
+      return responseData;
+    } catch (error: any) {
+      console.error("Signup failed:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Signup failed");
     }
   }
+  
+  
 
   async function signIn(email: string, password: string): Promise<boolean> {
     try {
