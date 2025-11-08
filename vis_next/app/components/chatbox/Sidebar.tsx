@@ -248,7 +248,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             <Link href="/explore" className="w-full">
               <Button
                 variant="default"
-                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+                className={`w-full mt-2 justify-start gap-3 bg-background text-foreground hover:bg-sidebar-primary/90 hover:text-foreground/90`}
               >
                 <MapPin size={20} />
                 Explore Hospitals
@@ -257,7 +257,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             <Link href="/news" className="w-full">
               <Button
                 variant="default"
-                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+                className={`w-full mt-2 justify-start gap-3 bg-background text-foreground hover:bg-sidebar-primary/90 hover:text-foreground/90`}
               >
                 <Newspaper size={20} />
                 Explore News
@@ -266,7 +266,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             <Link href="/doctors" className="w-full">
               <Button
                 variant="default"
-                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+                className={`w-full mt-2 justify-start gap-3 bg-background text-foreground hover:bg-sidebar-primary/90 hover:text-foreground/90`}
               >
                 <User size={20} />
                 View Doctors
@@ -464,7 +464,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           <Link href="/doctors" className="w-full">
             <Button
               variant="default"
-              className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+              className={`w-full mt-2 justify-start gap-3 bg-background text-foreground hover:bg-sidebar-primary/90 hover:text-foreground/90`}
             >
               <User size={20} />
               View Doctors

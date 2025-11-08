@@ -5,24 +5,31 @@ import bars from '../../../../public/svgs/bars.svg';
 import GetStartedButton from '@/app/components/Common/GetStartedButton';
 import ThemeSwitcher from '../../Common/ThemeSwitcher';
 import AnimatedLink from '@/app/components/Common/AnimatedLink';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { links, menu } from '../../../Varibles/header_constants';
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { getAuthToken } from '@/lib/auth-utils'; 
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
   const isMobile = useIsMobile();
+
   const filteredLinks = links.filter(
     (link) => !['Home', 'Features', 'About Us'].includes(link.linkTo)
   );
-  useState(() => {
-    if (!isMobile && isOpen) {
-      setIsOpen(false);
-    }
-  });
+
+  useEffect(() => {
+    const token = getAuthToken();
+    setIsLoggedIn(!!token);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile && isOpen) setIsOpen(false);
+  }, [isMobile, isOpen]);
 
   return (
     <section className="py-3 border-b border-secondly">
@@ -49,17 +56,28 @@ const Header = () => {
 
             <div className="flex items-center gap-4">
               <ThemeSwitcher />
-              <div 
-                onClick={() => router.push('/auth')}
-                className="flex items-center gap-4 cursor-pointer"
-              >
-                <AnimatedLink title="Login" />
-                <GetStartedButton padding={'8px 16px'} />
-              </div>
+
+              {isLoggedIn ? (
+                <div 
+                  onClick={() => router.push('/chat')}
+                  className="cursor-pointer"
+                >
+                  <AnimatedLink 
+                    title="Chat" 
+                  />
+                </div>
+              ) : (
+                <div 
+                  onClick={() => router.push('/auth')}
+                  className="flex items-center gap-4 cursor-pointer"
+                >
+                  <AnimatedLink title="Login" />
+                  <GetStartedButton padding={'8px 16px'} />
+                </div>
+              )}
             </div>
           </>
         )}
-
 
         {isMobile && (
           <div 
@@ -112,6 +130,7 @@ const Header = () => {
                   ✕
                 </button>
               </div>
+
               <nav className="flex flex-col gap-6">
                 {filteredLinks.map((link, i) => (
                   <div key={i} onClick={() => setIsOpen(false)}>
@@ -126,20 +145,36 @@ const Header = () => {
               <div className="mt-4">
                 <ThemeSwitcher />
               </div>
+
               <div className="mt-auto flex flex-col gap-4">
-                <div 
-                  onClick={() => {
-                    router.push('/auth');
-                    setIsOpen(false);
-                  }}
-                  className="cursor-pointer"
-                >
-                  <AnimatedLink 
-                    title="Login" 
-                    className="text-foreground text-lg font-medium"
-                  />
-                </div>
-                <GetStartedButton padding={'12px 24px'} />
+                {isLoggedIn ? (
+                  <div 
+                    onClick={() => {
+                      router.push('/chat');
+                      setIsOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <AnimatedLink 
+                      title="Chat" 
+                      className="text-foreground text-lg font-medium"
+                    />
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => {
+                      router.push('/auth');
+                      setIsOpen(false);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <AnimatedLink 
+                      title="Login" 
+                      className="text-foreground text-lg font-medium"
+                    />
+                    <GetStartedButton padding={'12px 24px'} />
+                  </div>
+                )}
               </div>
             </motion.div>
           </>

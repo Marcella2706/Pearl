@@ -75,6 +75,7 @@ public class AuthService {
                     .email(googleUser.getEmail())
                     .passwordHash(passwordEncoder.encode("temporary-password"))
                     .name(googleUser.getName())
+                    .role("USER")
                     .isActive(true)
                     .build();
             return userRepository.save(newUser);

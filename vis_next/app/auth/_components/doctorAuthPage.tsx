@@ -189,38 +189,6 @@ export default function AuthPage() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full flex items-center justify-center gap-3 bg-foreground-muted/20 border border-border text-foreground py-2 rounded-lg hover:bg-background/20 transition-all duration-300"
-                      onClick={() => googlelogin()}
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden>
-                        <path
-                          fill={color}
-                          opacity="0.9"
-                          d="M12 10.2V14h5.6c-.3 1.3-1 2.4-2 3.1v2.6h3.2c1.9-1.8 3-4.3 3-7.1 0-.7-.1-1.3-.2-1.9H12z"
-                        />
-                        <path
-                          fill={color}
-                          opacity="0.8"
-                          d="M6.8 14.6l-.9.7-2.5 1.9C5.1 20.8 8.4 23 12 23c3 0 5.5-1 7.4-2.6l-3.2-2.5c-.9.6-2.1 1-3.4 1-2.7 0-5-1.8-5.9-4.3z"
-                        />
-                        <path
-                          fill={color}
-                          opacity="0.3"
-                          d="M3.4 6.7C2.5 8.4 2 10.2 2 12c0 1.8.5 3.6 1.4 5.3l3.4-2.6c-.4-1.1-.6-2.2-.6-2.7 0-.6.2-1.6.6-2.7L3.4 6.7z"
-                        />
-                        <path
-                          fill={color}
-                          opacity="0.1"
-                          d="M12 4.8c1.7 0 3.2.6 4.4 1.7L19.5 4C17.5 2.2 14.9 1 12 1 8.4 1 5.1 3.2 3.4 6.7l3.4 2.6C7 6.8 9.3 4.8 12 4.8z"
-                        />
-                        </svg>
-                      <span className="text-foreground font-medium transition-colors duration-300">
-                        Continue With Google
-                      </span>
-                    </Button>
                   </motion.div>
                 )}
               </AnimatePresence>

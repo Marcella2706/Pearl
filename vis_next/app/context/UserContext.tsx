@@ -51,22 +51,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function googleAuth(token: string) {
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`, {
-        token
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`,
+        { token },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
   
-      if (response.data?.token) {
-        setAuthToken(response.data.token);
+      const data = response.data;
+  
+      if (data?.token) {
+        setAuthToken(data.token);
       }
   
       localStorage.setItem('__Google_Access_Token__', token);
       setGoogleAccessToken(token);
-      
-      return response.data.token;
+  
+      if (!data.user?.role) {
+        data.user = { ...data.user, role: "USER" };
+      }
+  
+      return data.token;
     } catch (error) {
       console.error(error);
       throw new Error('Failed to authenticate with Google');
