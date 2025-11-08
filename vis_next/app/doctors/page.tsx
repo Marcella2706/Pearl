@@ -216,7 +216,7 @@ if (loading) {
               </div>
 
               {/* Book Button */}
-              <Link href={`/testing`} className="w-full">
+              <Link href={`/doctors/${doctor.id}`} className="w-full">
                 <ModernButton variant="primary" size="md" className="w-full">
                   Book Appointment
                 </ModernButton>

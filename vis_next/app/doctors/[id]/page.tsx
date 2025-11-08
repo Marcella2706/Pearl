@@ -39,6 +39,7 @@ interface BookingForm {
 export default function DoctorBookingPage() {
   const router = useRouter()
   const { id } = useParams()
+
   const doctor = MOCK_DOCTORS[id as string]
 
   const [formData, setFormData] = useState<BookingForm>({
