@@ -25,6 +25,15 @@ def create_session(db: Session, user_id: uuid.UUID, session_in: schemas.SessionC
     db.refresh(db_session)
     return db_session
 
+def delete_session(db: Session, session_id: uuid.UUID) -> bool:
+    session = db.query(models.Session).filter(models.Session.id == session_id).first()
+    if not session:
+        return False
+    db.delete(session)
+    db.commit()
+    return True
+
+
 def get_user_sessions(db: Session, user_id: uuid.UUID):
     return db.query(models.Session).filter(models.Session.user_id == user_id).all()
 
@@ -59,10 +68,8 @@ def get_session_messages(db: Session, session_id: uuid.UUID):
              .all()
              
 def update_session_title(db: Session, session_id: uuid.UUID, title: str):
-    db_session = get_session(db, session_id=session_id)
-    if db_session:
-        db_session.title = title
-        db.add(db_session)
-        db.commit()
-        db.refresh(db_session)
-    return db_session
+    updated = db.query(models.Session).filter(models.Session.id == session_id).update({"title": title})
+    db.commit()
+    if updated:
+        return get_session(db, session_id)
+    return None

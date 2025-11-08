@@ -16,7 +16,8 @@ from app import crud, models
 from app.clients import openAi_Client
 
 # Use environment variable for backend URL, defaulting to Docker service name
-BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:2706/api/v1/user/current-user")
+# BACKEND_URL = os.getenv("BACKEND_URL", "http://backend:2706/api/v1/user/current-user")
+BACKEND_URL = "http://localhost:2706/api/v1/user/current-user"
 
 def get_current_user(authorization: str = Header(None)) -> dict:
     if not authorization:
@@ -55,6 +56,28 @@ def create_new_session(
     user = crud.get_or_create_user(db, email=user_email)
     session = crud.create_session(db, user_id=user.id, session_in=session_in)
     return session
+
+@router.delete("/{session_id}", response_model=dict)
+def delete_session(
+    session_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Deletes a specific chat session and all associated messages for the current user.
+    """
+    user_email = current_user.get("email")
+    user = crud.get_or_create_user(db, email=user_email)
+
+    if not crud.check_session_owner(db, session_id=session_id, user_id=user.id):
+        raise HTTPException(status_code=404, detail="Session not found or not owned by user")
+
+    deleted = crud.delete_session(db, session_id=session_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    return {"detail": f"Session {session_id} deleted successfully."}
+
 
 @router.get("/", response_model=List[SessionResponse])
 def get_all_user_sessions(
