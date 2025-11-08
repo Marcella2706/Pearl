@@ -1,9 +1,11 @@
 package com.pearl.backend.controllers;
 
+import com.pearl.backend.medical.AppointmentDto;
 import com.pearl.backend.medical.AppointmentRequest;
 import com.pearl.backend.entities.Appointment;
 import com.pearl.backend.entities.Users;
 import com.pearl.backend.medical.DoctorDTO;
+import com.pearl.backend.medical.UserDto;
 import com.pearl.backend.repositories.AppointmentRepository;
 import com.pearl.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/me/appointments")
-    public ResponseEntity<List<Appointment>> getMyAppointments() {
+    public ResponseEntity<List<AppointmentDto>> getMyAppointments() {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (!(principal instanceof Users currentUser)) {
@@ -50,8 +52,18 @@ public class AppointmentController {
             appointments = appointmentRepository.findByPatient(currentUser);
         }
 
-        return ResponseEntity.ok(appointments);
+        List<AppointmentDto> result = appointments.stream().map(a -> new AppointmentDto(
+                a.getId().toString(),
+                new UserDto(a.getDoctor().getId().toString(), a.getDoctor().getName(), a.getDoctor().getHospital(), a.getDoctor().getProfilePhoto()),
+                new UserDto(a.getPatient().getId().toString(), a.getPatient().getName(), null, a.getPatient().getProfilePhoto()),
+                a.getAppointmentTime(),
+                a.getDescription(),
+                a.getStatus()
+        )).toList();
+
+        return ResponseEntity.ok(result);
     }
+
 
     @PostMapping("/appointments")
     public ResponseEntity<Appointment> createAppointment(
@@ -74,6 +86,7 @@ public class AppointmentController {
                 .patient(patient)
                 .description(request.getDescription())
                 .appointmentTime(request.getAppointmentTime())
+                .status("Pending Confirmation")
                 .build();
 
         appointmentRepository.save(appointment);

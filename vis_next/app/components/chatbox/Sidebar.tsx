@@ -56,7 +56,6 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
   const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null);
   const [newTitle, setNewTitle] = useState("");
 
-  // Notify parent when collapse state changes
   useEffect(() => {
     if (onCollapseChange) {
       onCollapseChange(isCollapsed);
@@ -273,6 +272,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                 View Doctors
               </Button>
             </Link>
+
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -553,7 +553,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           <Link href="/chat" className="w-full">
             <Button
               variant="default"
-              className="w-full justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground"
+              className="w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-primary/90 text-foreground"
               onClick={handleNewChat}
             >
               <Plus size={20} />
@@ -564,7 +564,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           <Link href="/explore" className="w-full">
             <Button
               variant="default"
-              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-primary/90 text-foreground`}
             >
               <MapPin size={20} />
               Explore Hospitals
@@ -573,7 +573,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           <Link href="/news" className="w-full">
             <Button
               variant="default"
-              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-primary/90 text-foreground`}
             >
               <Newspaper size={20} />
               Explore News
@@ -582,7 +582,7 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           <Link href="/doctors" className="w-full">
             <Button
               variant="default"
-              className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+              className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-primary/90 text-foreground`}
             >
               <User size={20} />
               View Doctors

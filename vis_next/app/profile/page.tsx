@@ -84,7 +84,6 @@ export default function ProfilePage() {
     if (user) loadAppointments()
   }, [user])
 
-  // ✅ Get user location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -138,7 +137,7 @@ export default function ProfilePage() {
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-4xl mx-auto space-y-8">
-            {/* 🧍 Profile Card */}
+
             <Card className="bg-card border-border p-8 rounded-3xl shadow-2xl">
               <div className="flex flex-col lg:flex-row items-start space-y-6 lg:space-y-0 lg:space-x-8">
                 <div className="shrink-0">
@@ -239,7 +238,6 @@ export default function ProfilePage() {
               </div>
             </Card>
 
-            {/* 🗓️ Appointments Section */}
             <Card className="bg-card border-border p-8 rounded-3xl shadow-2xl relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-6">

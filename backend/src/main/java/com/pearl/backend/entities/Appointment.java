@@ -24,6 +24,8 @@ public class Appointment {
 
     private LocalDateTime appointmentTime;
 
+    private String status;
+
     @ManyToOne
     @JoinColumn(name = "doctor_id", nullable = false)
     private Users doctor;
