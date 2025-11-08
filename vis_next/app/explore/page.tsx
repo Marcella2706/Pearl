@@ -282,7 +282,20 @@ function HospitalSidebar() {
 export default function Page() {
   return (
     <>
-      <ExploreHeader />
+      <ExploreHeader 
+        title="Jivika"
+        subtitle="Explore Hospitals"
+        logoSrc="/images/logo.png"
+        ctaLabel="Chat"
+        ctaHref="/chat"
+        rightSlot={
+          <nav className="flex items-center gap-4 ml-4">
+            <Link href="/chat" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Chat</Link>
+            <Link href="/explore" className="text-sm font-medium text-primary underline-offset-4 hover:underline">Explore</Link>
+            <Link href="/news" className="text-sm font-medium text-foreground hover:text-primary transition-colors">News</Link>
+          </nav>
+        }
+      />
       <MapProvider>
         <div className="relative w-full flex flex-col xl:flex-row gap-6 px-6 bg-background min-h-[calc(100vh-96px)]">
           <HospitalSidebar />

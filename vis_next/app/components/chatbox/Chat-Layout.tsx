@@ -48,7 +48,6 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isResizing, isMobile, isCollapsed])
 
-  // Calculate sidebar width based on collapsed state
   const currentSidebarWidth = isCollapsed ? 64 : sidebarWidth
 
   return (
