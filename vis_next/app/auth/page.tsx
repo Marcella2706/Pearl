@@ -26,7 +26,7 @@ export default function AuthRoleSelectPage() {
     <ExploreHeader></ExploreHeader>
     <section className="relative min-h-screen bg-background flex items-center justify-center overflow-hidden transition-colors duration-300">
       <div
-        className="absolute w-96 h-96 rounded-full blur-3xl animate-pulse"
+        className="absolute w-120 h-120 rounded-full blur-3xl animate-pulse"
         style={{ backgroundColor: color, opacity: 0.07 }}
       />
 
