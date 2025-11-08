@@ -74,19 +74,31 @@ export default function AppointmentsPage() {
           ctaHref="/chat"
           rightSlot={
             <nav className="flex items-center gap-4 ml-4">
-              <Link
-                href="/explore"
-                className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-              >
-                Explore
-              </Link>
-              <Link
-                href="/news"
-                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                News
-              </Link>
-            </nav>
+            <Link
+              href="/explore"
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Explore
+            </Link>
+            <Link
+              href="/appointments"
+              className="text-sm font-medium text-primary hover:text-primary transition-colors"
+            >
+              Appointments
+            </Link>
+            <Link
+              href="/news"
+              className="text-sm font-medium text-foreground  underline-offset-4 hover:underline"
+            >
+              News
+            </Link>
+            <Link
+              href="/chat"
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Chat
+            </Link>
+          </nav>
           }
         />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
