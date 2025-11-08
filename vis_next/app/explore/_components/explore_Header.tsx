@@ -21,8 +21,6 @@ export default function ExploreHeader({
   logoSrc = '/images/logo.png',
   onBack,
   rightSlot,
-  ctaLabel='Chat',
-  ctaHref='chat',
 }: Props) {
   const router = useRouter();
   function handleBack() {
@@ -34,10 +32,6 @@ export default function ExploreHeader({
     }
   }
 
-  function handleCta() {
-    if (!ctaHref) return;
-    router.push(ctaHref);
-  }
 
   return (
     <header className="w-full bg-background shadow-sm sticky top-0 z-40">
@@ -78,14 +72,7 @@ export default function ExploreHeader({
 
             {rightSlot}
        
-            {ctaLabel && ctaHref ? (
-              <button
-                onClick={handleCta}
-                className="ml-2 px-3 py-1.5 rounded-md bg-primary text-background hover:bg-primary/80 focus:outline-none focus:ring-2 focus:ring-accent/60"
-              >
-                {ctaLabel}
-              </button>
-            ) : null}
+      
           </div>
         </div>
       </div>

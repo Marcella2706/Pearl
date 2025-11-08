@@ -17,6 +17,7 @@ import {
   MapPin,
   Pencil,
   Trash2,
+  Newspaper,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -248,6 +249,15 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
                 Explore Hospitals
               </Button>
             </Link>
+            <Link href="/news" className="w-full">
+              <Button
+                variant="default"
+                className={`w-full mt-2 justify-start gap-3 bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground`}
+              >
+                <Newspaper size={20} />
+                Explore News
+              </Button>
+            </Link>
           </div>
 
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -413,10 +423,19 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
             <Button
               variant="default"
               size="sm"
-              className={`h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground
-              `}
+              className="h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground"
             >
               <MapPin size={20} />
+            </Button>
+          </Link>
+          
+          <Link href="/news">
+            <Button
+              variant="default"
+              size="sm"
+              className="h-10 w-10 bg-background hover:bg-sidebar-accent text-foreground"
+            >
+              <Newspaper size={20} />
             </Button>
           </Link>
         </div>
@@ -511,6 +530,15 @@ export function Sidebar({ isMobile, onCollapseChange }: SidebarProps) {
           >
             <MapPin size={20} />
             Explore Hospitals
+          </Button>
+        </Link>
+         <Link href="/news" className="w-full">
+          <Button
+            variant="default"
+            className={`w-full mt-2 justify-start gap-3 bg-background hover:bg-sidebar-accent text-foreground`}
+          >
+            <Newspaper size={20} />
+            Explore News
           </Button>
         </Link>
       </div>

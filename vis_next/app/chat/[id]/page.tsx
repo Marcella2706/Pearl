@@ -4,7 +4,26 @@ import { ChatLayout } from "@/app/components/chatbox/Chat-Layout"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import MessageComponent, { MessageData } from "@/app/components/Common/MessageComponent"
-import { Send, Loader2, Stethoscope, Bot, HeartPulse, ImageIcon } from "lucide-react"
+import { 
+  Send, 
+  Loader2, 
+  Stethoscope, 
+  Bot, 
+  HeartPulse, 
+  ImageIcon,
+  Activity,
+  Droplet,
+  Scale,
+  ClipboardList,
+  ChevronDown
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
 import axios from "axios"
@@ -12,6 +31,10 @@ import { uploadImageToS3, UploadResult } from "@/lib/aws"
 import { Kbd } from "@/components/ui/kbd"
 import { getAuthToken } from "@/lib/auth-utils"
 import { HeartForm } from "../HeartForm"
+import { DiabetesForm } from "../DiabetesForm"
+import { SymptomForm } from "../SymptomForm"
+import { BMIForm } from "../BMIForm"
+import { BloodPressureForm } from "../BloodPressureForm"
 
 interface StreamChunk {
   type: "message" | "prediction" | "error" | "image"
@@ -38,9 +61,8 @@ export default function ChatDetailPage() {
   const [isFetching, setIsFetching] = useState(true)
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | null>(null)
+  const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure" | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [heartFormOpen,setHeartFormOpen]=useState<Boolean>(false);
   useEffect(() => {
     const fetchChat = async () => {
       if (!chatId) return
@@ -87,23 +109,23 @@ export default function ChatDetailPage() {
     }
   }, [selectedFiles, selectedTag])
     
-  const handleTagClick = (tag: "heart" | "xray") => {
+  const handleTagClick = (tag: "heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure") => {
     if (selectedTag === tag) {
       setSelectedTag(null)
       if (tag === "xray") setSelectedFiles(null)
       return
     }
     setSelectedTag(tag)
-    if (tag === "heart") {
+    if (tag === "heart" || tag === "diabetes" || tag === "symptoms" || tag === "bmi" || tag === "bloodpressure") {
       setSelectedFiles(null)
-      setHeartFormOpen(true);
+    } else if (tag === "xray" && fileInputRef.current) {
+      fileInputRef.current.click()
     }
-    else if (tag === "xray" && fileInputRef.current) fileInputRef.current.click()
   }
 
-  const handleHeartSubmit = (prompt: string) => {
+  const handleFormSubmit = (prompt: string) => {
     setInput(prompt)
-    setHeartFormOpen(false);
+    setSelectedTag(null)
   }
 
   const handleSendMessage = async () => {
@@ -370,25 +392,55 @@ export default function ChatDetailPage() {
               </Button>
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant={selectedTag === "heart" ? "default" : "outline"}
-                onClick={() => handleTagClick("heart")}
-                className="flex items-center gap-1 text-xs px-3 py-1 rounded-full"
-                disabled={isLoading}
-              >
-                <HeartPulse className="w-4 h-4" /> Heart
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedTag === "xray" ? "default" : "outline"}
-                onClick={() => handleTagClick("xray")}
-                className="flex items-center gap-1 text-xs px-3 py-1 rounded-full"
-                disabled={isLoading}
-              >
-                <ImageIcon className="w-4 h-4" /> X-ray / Wound Image
-              </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2 text-xs px-3 py-1 rounded-full"
+                    disabled={isLoading}
+                  >
+                    <Activity className="w-4 h-4" />
+                    {selectedTag ? (
+                      selectedTag === "heart" ? "Heart Health" :
+                      selectedTag === "diabetes" ? "Diabetes" :
+                      selectedTag === "symptoms" ? "Symptoms" :
+                      selectedTag === "bmi" ? "BMI Calculator" :
+                      selectedTag === "bloodpressure" ? "Blood Pressure" :
+                      "X-ray / Wound"
+                    ) : "Health Tools"}
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={() => handleTagClick("heart")}>
+                    <HeartPulse className="w-4 h-4 mr-2" />
+                    Heart Health Assessment
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("diabetes")}>
+                    <Droplet className="w-4 h-4 mr-2" />
+                    Diabetes Risk Check
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bloodpressure")}>
+                    <Activity className="w-4 h-4 mr-2" />
+                    Blood Pressure Analysis
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bmi")}>
+                    <Scale className="w-4 h-4 mr-2" />
+                    BMI Calculator
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("symptoms")}>
+                    <ClipboardList className="w-4 h-4 mr-2" />
+                    Symptom Checker
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleTagClick("xray")}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Upload X-ray / Wound Image
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <p className="text-xs text-foreground-muted mt-1">
@@ -397,17 +449,62 @@ export default function ChatDetailPage() {
           </div>
         </div>
       </div>
-       {heartFormOpen && (
+       
+      {selectedTag === "heart" && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="w-full max-w-lg">
             <HeartForm
               isOpen={true}
-              onClose={() => {
-                if(input.trim()===""){
-                  setSelectedTag(null);
-                }
-                setHeartFormOpen(false)}}
-              onSubmit={handleHeartSubmit}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "diabetes" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <DiabetesForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "symptoms" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <SymptomForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bmi" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BMIForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bloodpressure" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BloodPressureForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
             />
           </div>
         </div>
