@@ -7,10 +7,10 @@ import com.pearl.backend.repositories.AppointmentRepository;
 import com.pearl.backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -26,28 +26,39 @@ public class AppointmentController {
         return ResponseEntity.ok(doctors);
     }
 
-    @GetMapping("/doctors/{doctorId}/appointments")
-    public ResponseEntity<List<Appointment>> getDoctorAppointments(@PathVariable UUID doctorId) {
-        Users doctor = userRepository.findById(doctorId)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
-        List<Appointment> appointments = appointmentRepository.findByDoctor(doctor);
-        return ResponseEntity.ok(appointments);
-    }
+    @GetMapping("/me/appointments")
+    public ResponseEntity<List<Appointment>> getMyAppointments() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-    @GetMapping("/users/{userId}/appointments")
-    public ResponseEntity<List<Appointment>> getUserAppointments(@PathVariable UUID userId) {
-        Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        List<Appointment> appointments = appointmentRepository.findByPatient(user);
+        if (!(principal instanceof Users currentUser)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        List<Appointment> appointments;
+        if ("DOCTOR".equalsIgnoreCase(currentUser.getRole())) {
+            appointments = appointmentRepository.findByDoctor(currentUser);
+        } else {
+            appointments = appointmentRepository.findByPatient(currentUser);
+        }
+
         return ResponseEntity.ok(appointments);
     }
 
     @PostMapping("/appointments")
-    public ResponseEntity<Appointment> createAppointment(@RequestBody AppointmentRequest request) {
+    public ResponseEntity<Appointment> createAppointment(
+            @RequestBody AppointmentRequest request
+    ) {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (!(principal instanceof Users currentUser)) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        Users patient = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Users doctor = userRepository.findById(request.getDoctorId())
                 .orElseThrow(() -> new RuntimeException("Doctor not found"));
-        Users patient = userRepository.findById(request.getPatientId())
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
 
         Appointment appointment = Appointment.builder()
                 .doctor(doctor)
