@@ -1,9 +1,7 @@
 export const BackgroundEffects = () => {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-background" />
-      {/* Floating particles */}
+      <div className="absolute inset-0 bg-linear-to-br from-background via-card to-background" />
       <div className="absolute inset-0">
         {Array.from({ length: 20 }).map((_, i) => (
           <div
@@ -19,9 +17,9 @@ export const BackgroundEffects = () => {
         ))}
       </div>
       
-      {/* Gradient overlays for depth */}
-      <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-primary/5" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-accent/5" />
+  
+      <div className="absolute inset-0 bg-linear-to-t from-transparent via-transparent to-primary/5" />
+      <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-accent/5" />
     </div>
   );
 };

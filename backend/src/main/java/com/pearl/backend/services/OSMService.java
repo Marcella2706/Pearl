@@ -13,7 +13,7 @@ public class OSMService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String OVERPASS_API_URL = "https://overpass-api.de/api/interpreter?data={query}";
+    private final String OVERPASS_API_URL = "https://overpass.openstreetmap.fr/api/interpreter?data={query}";
 
     public Object findNearbyPlaces(double lat, double lng, int radius, String keyword) {
         String query = String.format(

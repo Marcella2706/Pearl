@@ -1,4 +1,3 @@
-// components/Common/MaskText.tsx
 'use client';
 import { useInView, motion, Variants } from 'framer-motion';
 import { useRef } from 'react';

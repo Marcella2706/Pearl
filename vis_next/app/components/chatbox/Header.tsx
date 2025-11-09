@@ -1,6 +1,5 @@
 import { Bell, Settings, User, Menu } from "lucide-react";
 import { Button2 } from "./buttonChat";
-//gotta add health logo afterwards
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -10,7 +9,6 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
   return (
     <header className="bg-background/95 backdrop-blur-xl border-b border-border w-full sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Left section - Menu & Logo */}
         <div className="flex items-center space-x-4">
           <Button2 variant="ghost" size="icon" onClick={onMenuToggle} className="md:hidden">
             <Menu className="h-5 w-5" />
@@ -33,7 +31,6 @@ export const Header = ({ onMenuToggle }: HeaderProps) => {
           </div>
         </div>
 
-        {/* Right section - Actions */}
         <div className="flex items-center space-x-2">
           <Button2 variant="ghost" size="icon" className="relative">
             <Bell className="h-4 w-4" />

@@ -1,6 +1,7 @@
 "use client"
 import { OTPInput } from "./otpInput"
 import { Button } from "@/components/ui/button"
+import { redirect } from "next/navigation"
 import { useState } from "react"
 export default function OTPEntryPage({generateOTP}:{
  generateOTP:()=>string
@@ -35,7 +36,7 @@ const handleResendOTP = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-background">
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.06)_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
       </div>
 
       <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-foreground/10 rounded-full blur-3xl animate-pulse" />
@@ -44,7 +45,7 @@ const handleResendOTP = () => {
         <h1 className="text-2xl font-bold text-center text-foreground transition-colors duration-300">
           Enter OTP
         </h1>
-        <p className="text-sm text-center mb-4 text-secondly transition-colors duration-300">
+        <p className="text-sm text-center mb-4 text-foreground transition-colors duration-300">
           Please enter the 6-digit code sent to your device
         </p>
         
@@ -73,7 +74,7 @@ const handleResendOTP = () => {
             handleOTPComplete(otp)
             }}
             disabled={isSubmitting}
-            className="rounded-lg py-2 px-4 bg-accent text-background hover:bg-accent-hover transition-all duration-300"
+            className="rounded-lg py-2 px-4 bg-primary text-background hover:bg-primary transition-all duration-300"
           >
             {isSubmitting ? "Verifying..." : "Verify OTP"}
           </Button>

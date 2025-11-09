@@ -3,15 +3,53 @@
 import { ChatLayout } from "@/app/components/chatbox/Chat-Layout"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Send, Loader2, Stethoscope } from "lucide-react"
+import MessageComponent, { MessageData } from "@/app/components/Common/MessageComponent"
+import { 
+  Send, 
+  Loader2, 
+  Stethoscope, 
+  Bot, 
+  HeartPulse, 
+  ImageIcon,
+  Activity,
+  Droplet,
+  Scale,
+  ClipboardList,
+  ChevronDown
+} from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { useParams } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
+import axios from "axios"
+import { uploadImageToS3, UploadResult } from "@/lib/aws" 
+import { Kbd } from "@/components/ui/kbd"
+import { getAuthToken } from "@/lib/auth-utils"
+import { HeartForm } from "../HeartForm"
+import { DiabetesForm } from "../DiabetesForm"
+import { SymptomForm } from "../SymptomForm"
+import { BMIForm } from "../BMIForm"
+import { BloodPressureForm } from "../BloodPressureForm"
+
+interface StreamChunk {
+  type: "message" | "prediction" | "error" | "image"
+  content: string
+}
 
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
+  isThinking?: boolean
+  imageUrl?: string
+  messageType?: "text" | "image" | "text_with_image"
+  isPrediction?: boolean
 }
 
 export default function ChatDetailPage() {
@@ -23,14 +61,33 @@ export default function ChatDetailPage() {
   const [isFetching, setIsFetching] = useState(true)
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  // Fetch chat messages
+  const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure" | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     const fetchChat = async () => {
+      if (!chatId) return
+      setIsFetching(true)
       try {
-        const response = await fetch(`/api/chats/${chatId}`)
-        const data = await response.json()
-        setMessages(data.messages || [])
+
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/messages`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          }
+        )
+        
+        const fetchedMessages: Message[] = response.data.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role === "human" ? "user" : "assistant",
+          content: msg.content,
+          timestamp: new Date(msg.created_at), 
+          // If your backend stored images as ai content URLs, you may want to set messageType/imageUrl here.
+        }))
+        
+        setMessages(fetchedMessages)
       } catch (error) {
         console.error("Error fetching chat:", error)
       } finally {
@@ -40,43 +97,210 @@ export default function ChatDetailPage() {
     fetchChat()
   }, [chatId])
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+  useEffect(() => {
+    if ((selectedFiles?.length ?? 0) === 0 && selectedTag === "xray") {
+      setSelectedTag(null);
+    }
+    if ((selectedFiles?.length ?? 0) > 0) {
+      setSelectedTag("xray");
+    }
+  }, [selectedFiles, selectedTag])
+    
+  const handleTagClick = (tag: "heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure") => {
+    if (selectedTag === tag) {
+      setSelectedTag(null)
+      if (tag === "xray") setSelectedFiles(null)
+      return
+    }
+    setSelectedTag(tag)
+    if (tag === "heart" || tag === "diabetes" || tag === "symptoms" || tag === "bmi" || tag === "bloodpressure") {
+      setSelectedFiles(null)
+    } else if (tag === "xray" && fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
+  const handleFormSubmit = (prompt: string) => {
+    setInput(prompt)
+    setSelectedTag(null)
+  }
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return
+    console.log("here");
+    if (!input.trim() && (!selectedFiles || selectedFiles.length === 0)) return
+    console.log("here");
+    console.log(selectedFiles)
+    let imageUrl = "";
+    if (selectedFiles && selectedFiles.length > 0) {
+      const file = selectedFiles[0]; 
+      try {
+        const uploadResult: UploadResult = await uploadImageToS3(file);
+        if (uploadResult.success && uploadResult.url) {
+          imageUrl = uploadResult.url;
+        } else {
+          console.error("Image upload failed:", uploadResult.error);
+          return;
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        return;
+      }
+    }
+    console.log(imageUrl)
+
+    let messageType: "text" | "image" | "text_with_image" = "text";
+    if (imageUrl && input.trim()) {
+      messageType = "text_with_image";
+    } else if (imageUrl) {
+      messageType = "image";
+    } 
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
       content: input,
       timestamp: new Date(),
+      imageUrl: imageUrl || undefined,
+      messageType,
     }
 
     setMessages((prev) => [...prev, userMessage])
     setInput("")
+    setSelectedFiles(null) 
+    setSelectedTag(null)
     setIsLoading(true)
 
+    const assistantId = (Date.now() + 1).toString()
+    const assistantMessage: Message = {
+      id: assistantId,
+      role: "assistant",
+      content: "", 
+      timestamp: new Date(),
+      isThinking: true, 
+    }
+    setMessages((prev) => [...prev, assistantMessage])
+
     try {
-      const response = await fetch(`/api/chats/${chatId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      })
-      const data = await response.json()
-      if (data.reply) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: data.reply,
-          timestamp: new Date(),
+      const requestBody: any = {
+        content: userMessage.content,
+      };
+
+      if (imageUrl) {
+        requestBody.imageURL = imageUrl;
+      }
+
+      if (selectedTag === "heart") {
+        requestBody.tag = "heart";
+      } else if (selectedTag === "xray") {
+        requestBody.tag = "xray";
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${chatId}/chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+          body: JSON.stringify(requestBody),
         }
-        setMessages((prev) => [...prev, assistantMessage])
+      )
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      if (!response.body) {
+        throw new Error("No response body")
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let partialData = ""
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) {
+            break
+          }
+
+          partialData += decoder.decode(value, { stream: true })
+          const lines = partialData.split("\n")
+          partialData = lines.pop() || ""
+
+          for (const line of lines) {
+            if (!line.trim()) continue
+            
+            try {
+              const chunk: StreamChunk = JSON.parse(line)
+              
+              if (chunk.type === "message" || chunk.type === "prediction") {
+                setMessages((prev) =>
+                  prev.map((msg) =>
+                    msg.id === assistantId
+                      ? { 
+                          ...msg, 
+                          content: msg.content + chunk.content, 
+                          isThinking: false,
+                          isPrediction: chunk.type === "prediction" ? true : msg.isPrediction
+                        }
+                      : msg
+                  )
+                )
+              } else if (chunk.type === "image") {
+                // Create a separate assistant message for each image chunk so they display correctly.
+                const imgMessage: Message = {
+                  id: (Date.now() + Math.random()).toString(),
+                  role: "assistant",
+                  content: "", // optional caption could be added
+                  timestamp: new Date(),
+                  imageUrl: chunk.content,
+                  messageType: "image",
+                  isThinking: false,
+                }
+                setMessages((prev) => [...prev, imgMessage])
+              } else if (chunk.type === "error") {
+                console.warn("Stream error received:", chunk.content)
+                if (chunk.content !== "the connection is closed") {
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantId
+                        ? { ...msg, content: msg.content + `\n\n[ERROR: ${chunk.content}]`, isThinking: false }
+                        : msg
+                    )
+                  )
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing stream chunk:", line, e)
+            }
+          }
+        }
+      } catch (readerError) {
+        console.error("Stream reading error:", readerError)
+      } finally {
+        // Ensure assistant thinking flag is cleared
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId && msg.isThinking
+              ? { ...msg, isThinking: false }
+              : msg
+          )
+        )
       }
     } catch (error) {
       console.error("Error sending message:", error)
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantId
+            ? { ...msg, content: "Sorry, an error occurred. Please try again.", isThinking: false }
+            : msg
+        )
+      )
     } finally {
       setIsLoading(false)
     }
@@ -97,7 +321,10 @@ export default function ChatDetailPage() {
     return (
       <ChatLayout>
         <div className="flex items-center justify-center h-full">
-          <Loader2 className="animate-spin text-primary" size={32} />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="animate-spin text-accent" size={32} />
+            <p className="text-foreground-muted text-sm">Loading conversation...</p>
+          </div>
         </div>
       </ChatLayout>
     )
@@ -106,56 +333,35 @@ export default function ChatDetailPage() {
   return (
     <ChatLayout>
       <div className="flex flex-col h-full bg-background text-foreground">
-        {/* Header */}
-        <div className="p-4 md:p-6 shrink-0 bg-background backdrop-blur">
+        <div className="p-4 md:p-6 shrink-0 bg-background backdrop-blur border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/20 rounded-lg">
+            <div className="p-2 bg-foreground/10 rounded-lg">
               <Stethoscope className="text-primary" size={24} />
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground">JIVIKA</h1>
-              <p className="text-sm text-muted-foreground">Doctor AI Assistant</p>
+              <p className="text-sm text-foreground-muted">Doctor AI Assistant</p>
             </div>
           </div>
         </div>
 
-        {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-background">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>Start a conversation with JIVIKA</p>
+            <div className="flex flex-col items-center justify-center h-full text-foreground-muted">
+              <div className="p-4 bg-foreground/10 rounded-full mb-4">
+                <Bot className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Start a conversation</h3>
+              <p className="text-center max-w-md">Ask JIVIKA any health-related questions and get AI-powered medical assistance.</p>
             </div>
           ) : (
             messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl ${
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-border text-card-foreground"
-                  }`}
-                >
-                  <p className="text-sm md:text-base whitespace-pre-wrap leading-relaxed">
-                    {message.content}
-                  </p>
-                </div>
-              </div>
+              <MessageComponent key={message.id} message={message} />
             ))
-          )}
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-card border border-border px-4 py-3 rounded-2xl">
-                <Loader2 className="animate-spin text-primary" size={20} />
-              </div>
-            </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="p-4 md:p-6 bg-background backdrop-blur shrink-0">
           <div className="max-w-4xl mx-auto flex flex-col gap-2">
             <div className="flex">
@@ -174,23 +380,135 @@ export default function ChatDetailPage() {
                 selectedFiles={selectedFiles}
                 onFilesChange={handleFilesChange}
                 onRemoveFile={handleRemoveFile}
+                fileInputRef={fileInputRef}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!input.trim() || isLoading}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground mb-5 ml-2 px-4 md:px-4 self-end"
+                disabled={(!input.trim() && (!selectedFiles || selectedFiles.length === 0)) || isLoading}
+                className="bg-accent  text-background mb-5 ml-2 px-4 md:px-4 self-end"
                 size="icon"
               >
-                {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} className="text-foreground"/>}
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-1">
-              Press Shift + Enter for new line
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2 text-xs px-3 py-1 rounded-full"
+                    disabled={isLoading}
+                  >
+                    <Activity className="w-4 h-4" />
+                    {selectedTag ? (
+                      selectedTag === "heart" ? "Heart Health" :
+                      selectedTag === "diabetes" ? "Diabetes" :
+                      selectedTag === "symptoms" ? "Symptoms" :
+                      selectedTag === "bmi" ? "BMI Calculator" :
+                      selectedTag === "bloodpressure" ? "Blood Pressure" :
+                      "X-ray / Wound"
+                    ) : "Health Tools"}
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={() => handleTagClick("heart")}>
+                    <HeartPulse className="w-4 h-4 mr-2" />
+                    Heart Health Assessment
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("diabetes")}>
+                    <Droplet className="w-4 h-4 mr-2" />
+                    Diabetes Risk Check
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bloodpressure")}>
+                    <Activity className="w-4 h-4 mr-2" />
+                    Blood Pressure Analysis
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bmi")}>
+                    <Scale className="w-4 h-4 mr-2" />
+                    BMI Calculator
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("symptoms")}>
+                    <ClipboardList className="w-4 h-4 mr-2" />
+                    Symptom Checker
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleTagClick("xray")}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Upload X-ray / Wound Image
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <p className="text-xs text-foreground-muted mt-1">
+              Press <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd> for new line
             </p>
           </div>
         </div>
       </div>
+       
+      {selectedTag === "heart" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <HeartForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "diabetes" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <DiabetesForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "symptoms" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <SymptomForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bmi" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BMIForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bloodpressure" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BloodPressureForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
     </ChatLayout>
   )
 }

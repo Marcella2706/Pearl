@@ -9,11 +9,13 @@ export interface TextareaProps
   onFilesChange?: (files: FileList) => void
   selectedFiles?: FileList | null
   onRemoveFile?: (index: number) => void
+  fileInputRef?: React.RefObject<HTMLInputElement | null>
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, onFilesChange, selectedFiles, onRemoveFile, ...props }, ref) => {
-    const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  ({ className, onFilesChange, selectedFiles, onRemoveFile, fileInputRef: externalFileInputRef, ...props }, ref) => {
+    const internalFileInputRef = React.useRef<HTMLInputElement | null>(null)
+    const fileInputRef = externalFileInputRef || internalFileInputRef
 
     const handleFileButtonClick = () => {
       fileInputRef.current?.click()
@@ -75,7 +77,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           <textarea
             ref={ref}
             className={cn(
-              "flex min-h-[80px] w-full resize-none rounded-md border border-border bg-card px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
+              "flex min-h-20 w-full resize-none rounded-md border border-border bg-card px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50",
               className
             )}
             {...props}

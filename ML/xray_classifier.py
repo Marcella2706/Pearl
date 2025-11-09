@@ -42,8 +42,8 @@ data_transforms = transforms.Compose([
 ])
 
 
-model = models.resnet18(pretrained=False);
-model.fc = nn.Linear(model.fc.in_features, 3);
+model = models.resnet18(pretrained=False)
+model.fc = nn.Linear(model.fc.in_features, 3)
 model.load_state_dict(torch.load("resnet18_brain_tumor.pth", map_location=device))
 
 model.to(device)
@@ -101,6 +101,6 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="127.0.0.1", port=5001)
 
 

@@ -10,7 +10,7 @@ const Preloader = ({
 }) => {
   const word = ['J', 'i', 'v', 'i','k','a'];
 
-  const spans = useRef<(HTMLDivElement | null)[]>([]); // Create a ref to store the span elements
+  const spans = useRef<(HTMLDivElement | null)[]>([]); 
   const imageRef = useRef(null);
   const secondOverlayRef = useRef(null);
   const wrapperRef = useRef(null);

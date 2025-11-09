@@ -1,0 +1,108 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: health_postgres
+    environment:
+      POSTGRES_DB: healthdb
+      POSTGRES_USER: healthuser
+      POSTGRES_PASSWORD: healthpass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthuser -d healthdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - health_network
+
+  backend:
+    image: blitzermoon/health-backend:latest
+    container_name: health_backend
+    platform: linux/amd64
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/healthdb
+      DB_USERNAME: healthuser
+      DB_PASSWORD: healthpass
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_MAIL: ${SMTP_MAIL}
+      APP_PASSWORD: ${APP_PASSWORD}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "2706:2706"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - health_network
+    volumes:
+      - backend_logs:/app/logs
+    restart: unless-stopped
+
+  genai:
+    image: blitzermoon/health-genai:latest
+    container_name: health_genai
+    platform: linux/amd64
+    environment:
+      PSQL_USERNAME: healthuser
+      PSQL_PASSWORD: healthpass
+      PSQL_HOST: postgres
+      PSQL_PORT: 5432
+      PSQL_DATABASE: healthdb
+      PSQL_SSLMODE: disable
+      DATABASE_URL: postgresql://healthuser:healthpass@postgres:5432/healthdb
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      BACKEND_URL: http://backend:2706/api/v1/user/current-user
+      LANGSMITH_TRACING_V2: ${LANGSMITH_TRACING_V2:-false}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-health-genai}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - health_network
+    volumes:
+      - genai_logs:/app/logs
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: health_pgadmin
+    platform: linux/amd64
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@health.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - health_network
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  backend_logs:
+    driver: local
+  genai_logs:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  health_network:
+    driver: bridge

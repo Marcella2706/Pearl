@@ -7,8 +7,8 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState(260)
   const [isResizing, setIsResizing] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
-  // Detect mobile view
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
     checkMobile()
@@ -16,14 +16,18 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  const handleCollapseChange = (collapsed: boolean) => {
+    setIsCollapsed(collapsed)
+  }
+
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (isMobile) return // disable drag on mobile
+    if (isMobile || isCollapsed) return
     e.preventDefault()
     setIsResizing(true)
   }
 
   const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing || isMobile) return
+    if (!isResizing || isMobile || isCollapsed) return
     const newWidth = e.clientX
     if (newWidth > 180 && newWidth < 600) setSidebarWidth(newWidth)
   }
@@ -42,21 +46,21 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [isResizing, isMobile])
+  }, [isResizing, isMobile, isCollapsed])
+
+  const currentSidebarWidth = isCollapsed ? 64 : sidebarWidth
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      {/* Sidebar */}
       <div
         style={{
-          width: isMobile ? "0px" : `${sidebarWidth}px`,
+          width: isMobile ? "0px" : `${currentSidebarWidth}px`,
         }}
-        className="relative flex-shrink-0 border-r border-border bg-background hidden md:block"
+        className="relative shrink-0 border-r border-border bg-background hidden md:block"
       >
-        <Sidebar isMobile={false} />
+        <Sidebar isMobile={false} onCollapseChange={handleCollapseChange} />
 
-        {/* Drag Handle (desktop only) */}
-        {!isMobile && (
+        {!isMobile && !isCollapsed && (
           <div
             onMouseDown={handleMouseDown}
             className="absolute top-0 right-0 w-1 cursor-col-resize h-full bg-transparent hover:bg-muted transition-colors"
@@ -64,10 +68,8 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
         )}
       </div>
 
-      {/* Mobile Sidebar (overlay style) */}
       {isMobile && <Sidebar isMobile={true} />}
 
-      {/* Main content */}
       <main className="flex-1 flex flex-col overflow-hidden bg-background">
         {children}
       </main>

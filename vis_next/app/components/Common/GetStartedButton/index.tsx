@@ -6,8 +6,8 @@ const GetStartedButton = ({ padding }: { padding: string }) => {
       style={{
         padding: padding,
       }}
-      href="/"
-      className="flex justify-center items-center rounded-full bg-primary text-accent text-base font-semibold hover:bg-destructive transition-colors"
+      href="/auth"
+      className="flex justify-center items-center rounded-full bg-primary text-accent text-base font-semibold hover:bg-primary/70 transition-colors"
     >
       Get Started
     </Link>

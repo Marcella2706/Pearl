@@ -11,6 +11,8 @@ type Props = {
   logoSrc?: string;
   onBack?: () => void;
   rightSlot?: React.ReactNode;
+  ctaLabel?: string;
+  ctaHref?: string; 
 };
 
 export default function ExploreHeader({
@@ -30,6 +32,7 @@ export default function ExploreHeader({
     }
   }
 
+
   return (
     <header className="w-full bg-background shadow-sm sticky top-0 z-40">
       <div className="max-w-7xl  px-4 sm:px-6 lg:px-8">
@@ -43,7 +46,6 @@ export default function ExploreHeader({
               <ArrowLeft className="h-5 w-5 text-primary" />
             </button>
 
-            {/* Brand */}
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 rounded-full overflow-hidden shadow-md ring-1 ring-gray-700">
                 <NextImage
@@ -59,13 +61,19 @@ export default function ExploreHeader({
               <div className="flex flex-col leading-tight">
                 <span className="font-semibold text-lg text-foreground tracking-tight">{title}</span>
                 {subtitle ? (
-                  <span className="text-xs text-foregound-muted -mt-0.5">{subtitle}</span>
+                  <span className="text-xs text-foreground-muted -mt-0.5">{subtitle}</span>
                 ) : null}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3"><ThemeSwitcher></ThemeSwitcher></div>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+
+            {rightSlot}
+       
+      
+          </div>
         </div>
       </div>
     </header>

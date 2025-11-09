@@ -1,6 +1,4 @@
 'use client';
-import { useState } from 'react';
-import Image from 'next/image';
 import MaskText from '@/app/components/Common/MaskText';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import {

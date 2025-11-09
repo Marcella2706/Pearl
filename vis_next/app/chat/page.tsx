@@ -1,12 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChatLayout } from "../components/chatbox/Chat-Layout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Stethoscope, Loader2 } from "lucide-react";
-
+import { 
+  Send, 
+  Stethoscope, 
+  Loader2, 
+  HeartPulse, 
+  ImageIcon, 
+  Activity,
+  Droplet,
+  Scale,
+  ClipboardList,
+  ChevronDown
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import axios from "axios";
+import { getAuthToken } from "@/lib/auth-utils";
+import { Kbd } from "@/components/ui/kbd";
+import { uploadImageToS3, UploadResult } from "@/lib/aws";
+import { HeartForm } from "./HeartForm";
+import { DiabetesForm } from "./DiabetesForm";
+import { SymptomForm } from "./SymptomForm";
+import { BMIForm } from "./BMIForm";
+import { BloodPressureForm } from "./BloodPressureForm";
 const SUGGESTIONS = [
   "What are symptoms of flu?",
   "How to manage stress?",
@@ -20,25 +46,73 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const username = "User";
+  const [selectedTag, setSelectedTag] = useState<"heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure" | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
-
+    if (!message.trim() && (!selectedFiles || selectedFiles.length === 0)) return;
+  
     setIsLoading(true);
+  
     try {
-      const response = await fetch("/api/chats", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ initialMessage: message }),
-      });
-      const data = await response.json();
-      if (data.chatId) router.push(`/chat/${data.chatId}`);
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        const sessionRes = await axios.post(
+          `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/`,
+          { title: "New Chat" },
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          }
+        );
+        const sessionData = sessionRes.data;
+        activeSessionId = sessionData.id;
+        setSessionId(sessionData.id);
+        console.log("Session created:", sessionData.id);
+      }
+  
+      let imageUrl = "";
+      if (selectedFiles && selectedFiles.length > 0) {
+        const file = selectedFiles[0];
+        const uploadResult: UploadResult = await uploadImageToS3(file);
+        if (uploadResult.success && uploadResult.url) {
+          imageUrl = uploadResult.url;
+        } else {
+          console.error("Image upload failed:", uploadResult.error);
+          return;
+        }
+      }
+  
+      const requestBody: any = { content: message };
+      if (imageUrl) requestBody.imageURL = imageUrl;
+      if (selectedTag) requestBody.tag = selectedTag;
+  
+      const messageResponse = await axios.post(
+        `${process.env.NEXT_PUBLIC_FASTAPI_BACKEND_URL}/sessions/${activeSessionId}/chat`,
+        requestBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        }
+      );
+  
+      console.log("💬 Message sent:", messageResponse.data);
+  
+      router.push(`/chat/${activeSessionId}`);
     } catch (error) {
-      console.error("Error creating chat:", error);
+      console.error("Error sending message:", error);
     } finally {
       setIsLoading(false);
     }
   };
+  
+  
+
   interface ChangeEvent {
     target: HTMLTextAreaElement;
   }
@@ -78,13 +152,29 @@ export default function ChatPage() {
       handleSendMessage();
     }
   };
+   const handleTagClick = (tag: "heart" | "xray" | "diabetes" | "symptoms" | "bmi" | "bloodpressure") => {
+    if (selectedTag === tag) {
+      setSelectedTag(null);
+      if (tag === "xray") setSelectedFiles(null);
+      return;
+    }
+    setSelectedTag(tag);
+    if (tag === "heart" || tag === "diabetes" || tag === "symptoms" || tag === "bmi" || tag === "bloodpressure") {
+      setSelectedFiles(null);
+    } else if (tag === "xray" && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
 
+  const handleFormSubmit = (prompt: string) => {
+    setMessage(prompt);
+    setSelectedTag(null);
+  };
   const handleSuggestionClick = (suggestion: string) => setMessage(suggestion);
 
   return (
     <ChatLayout>
       <div className="flex flex-col h-full bg-background">
-        {/* Header */}
         <div className="p-4 md:p-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/20 rounded-lg">
@@ -100,8 +190,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-
-        {/* Main Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-y-auto">
           <div className="w-full max-w-2xl space-y-8">
             <div className="text-center space-y-2">
@@ -113,7 +201,6 @@ export default function ChatPage() {
               </p>
             </div>
 
-            {/* Suggestions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {SUGGESTIONS.map((s, i) => (
                 <button
@@ -129,8 +216,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-
-        {/* Input Area */}
         <div className=" p-4 md:p-6 bg-background shrink-0">
           <div className="max-w-2xl mx-auto flex flex-col gap-2">
             <div className="flex">
@@ -144,6 +229,7 @@ export default function ChatPage() {
                 selectedFiles={selectedFiles}
                 onFilesChange={handleFilesChange}
                 onRemoveFile={handleRemoveFile}
+                fileInputRef={fileInputRef}
               />
               <Button
                 onClick={handleSendMessage}
@@ -187,13 +273,123 @@ export default function ChatPage() {
                 )}
               </div>
             </div> */}
-
+             <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center gap-2 text-xs px-3 py-1 rounded-full"
+                    disabled={isLoading}
+                  >
+                    <Activity className="w-4 h-4" />
+                    {selectedTag ? (
+                      selectedTag === "heart" ? "Heart Health" :
+                      selectedTag === "diabetes" ? "Diabetes" :
+                      selectedTag === "symptoms" ? "Symptoms" :
+                      selectedTag === "bmi" ? "BMI Calculator" :
+                      selectedTag === "bloodpressure" ? "Blood Pressure" :
+                      "X-ray / Wound"
+                    ) : "Health Tools"}
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuItem onClick={() => handleTagClick("heart")}>
+                    <HeartPulse className="w-4 h-4 mr-2" />
+                    Heart Health Assessment
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("diabetes")}>
+                    <Droplet className="w-4 h-4 mr-2" />
+                    Diabetes Risk Check
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bloodpressure")}>
+                    <Activity className="w-4 h-4 mr-2" />
+                    Blood Pressure Analysis
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("bmi")}>
+                    <Scale className="w-4 h-4 mr-2" />
+                    BMI Calculator
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTagClick("symptoms")}>
+                    <ClipboardList className="w-4 h-4 mr-2" />
+                    Symptom Checker
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleTagClick("xray")}>
+                    <ImageIcon className="w-4 h-4 mr-2" />
+                    Upload X-ray / Wound Image
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Press Shift + Enter for new line
+              Press <Kbd>Shift</Kbd> + <Kbd>Enter</Kbd> for new line
             </p>
           </div>
         </div>
       </div>
+      
+  
+      {selectedTag === "heart" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <HeartForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "diabetes" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <DiabetesForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "symptoms" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <SymptomForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bmi" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BMIForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
+
+      {selectedTag === "bloodpressure" && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="w-full max-w-lg">
+            <BloodPressureForm
+              isOpen={true}
+              onClose={() => setSelectedTag(null)}
+              onSubmit={handleFormSubmit}
+            />
+          </div>
+        </div>
+      )}
     </ChatLayout>
   );
 }

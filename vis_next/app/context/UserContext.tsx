@@ -3,6 +3,7 @@
 import { createContext, useContext, useState } from 'react';
 import { useCurrentUser } from '@/hooks/useUser';
 import axios from 'axios';
+import { setAuthToken, removeAuthToken } from '@/lib/auth-utils';
 
 export interface User {
   name: string;
@@ -18,7 +19,12 @@ interface UserContextType {
   generateOTP: () => string;
   sendOTP: (email: string) => Promise<string>;
   changePassword: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+    options?: { role?: "USER" | "DOCTOR"; hospital?: string }
+  ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<Boolean>;
   logout: () => void;
 }
@@ -45,22 +51,30 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function googleAuth(token: string) {
     try {
-      const response = await axios.post(`http://localhost:2706/api/v1/auth/google`, {
-        token
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`,
+        { token },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
   
-      if (response.data?.token) {
-        localStorage.setItem('__Pearl_Token', response.data.token);
+      const data = response.data;
+  
+      if (data?.token) {
+        setAuthToken(data.token);
       }
   
       localStorage.setItem('__Google_Access_Token__', token);
       setGoogleAccessToken(token);
-      
-      return response.data.token;
+  
+      if (!data.user?.role) {
+        data.user = { ...data.user, role: "USER" };
+      }
+  
+      return data.token;
     } catch (error) {
       console.error(error);
       throw new Error('Failed to authenticate with Google');
@@ -74,9 +88,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   async function sendOTP(email: string) {
     const otp = generateOTP();
     localStorage.setItem("currentOtp", otp);
-    const message = `Your OTP is ${otp}. Thank You For Registering With MarcelPearl`;
+    const message = `Your OTP is ${otp}. Thank You For Registering With Jivika`;
 
-    const response = await axios.post(`http://localhost:2706/api/v1/auth/otpVerification`, {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/otpVerification`, {
       email,
       otp: message,
     }, {
@@ -92,26 +106,47 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return "OTP sent to email";
   }
 
-  async function signUp(email: string, password: string, name: string) {
-    const response = await axios.post(`http://localhost:2706/api/v1/auth/signup`, {
-      name,
-      email,
-      password
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const responseData = await response.data;
-    if (responseData.token) {
-      localStorage.setItem('__Pearl_Token', responseData.token);
+  async function signUp(
+    email: string,
+    password: string,
+    name: string,
+    options?: { role?: "USER" | "DOCTOR"; hospital?: string }
+  ) {
+    console.log("entered")
+    const role = options?.role || "USER";
+    const hospital = options?.hospital || null;
+  
+    console.log("%c[SignUp] Payload being sent →", "color: #00BFFF; font-weight: bold;");
+    console.table({ email, password, name, role, hospital });
+  
+    try {
+      console.log("Backend URL:", process.env.NEXT_PUBLIC_BACKEND_URL);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signup`,
+        { email, password, name, role, hospital },
+        { headers: { "Content-Type": "application/json" } }
+      );
+  
+      console.log("%c[SignUp] Response received →", "color: #32CD32; font-weight: bold;");
+      console.log(response.data);
+  
+      const responseData = response.data;
+  
+      if (responseData.token) {
+        console.log("%c[SignUp] Token received:", "color: #FFD700;");
+        console.log(responseData.token);
+        setAuthToken(responseData.token);
+      }
+    } catch (error: any) {
+      console.error("%c[SignUp] Signup failed:", "color: red; font-weight: bold;");
+      console.error(error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Signup failed");
     }
-  }
+  } 
 
   async function signIn(email: string, password: string): Promise<boolean> {
     try {
-      const response = await axios.post(`http://localhost:2706/api/v1/auth/signin`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/signin`, {
         email,
         password,
       }, {
@@ -120,7 +155,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   
       const responseData = response.data; 
       if (responseData.token) {
-        localStorage.setItem('__Pearl_Token', responseData.token);
+        setAuthToken(responseData.token);
         return true; 
       }
       return false;
@@ -137,7 +172,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const response = await axios.post(
-      `http://localhost:2706/api/v1/auth/reset-password`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/reset-password`,
       {
         email,
         newPassword,
@@ -152,7 +187,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("Password reset response:", response.data);
   }
   const logout = () => {
-    localStorage.removeItem('__Pearl_Token');
+    removeAuthToken();
     setGoogleAccessToken(null);
     window.location.reload();
   };
