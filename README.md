@@ -2,7 +2,7 @@
 
 **Jivika AI** is an end-to-end, AI-powered healthcare assistant that leverages advanced **Generative AI**, **Deep Learning**, and **Automation** to make medical support smarter, faster, and more accessible.  
 
-Built with ❤️ by [Saumya Sood](#), [Vishwas Pahwa](#), [Kyan Mahajan](#), and [Vaidik Kathal](#).  
+Built with ❤️ by Saumya Sood, Vishwas Pahwa, Kyan Mahajan, and Vaidik Kathal.  
 
 🎥 **Demo Video:** [https://lnkd.in/eNbuNBzX](https://lnkd.in/eNbuNBzX)  
 🌐 **Live Frontend:** [https://jivika.pearl99z.tech](https://jivika.pearl99z.tech)  
@@ -11,19 +11,19 @@ Built with ❤️ by [Saumya Sood](#), [Vishwas Pahwa](#), [Kyan Mahajan](#), an
 ---
 
 ## 🧭 Table of Contents
-1. [Overview](#overview)  
-2. [Key Features](#key-features)  
-3. [Architecture](#architecture)  
-4. [Tech Stack](#tech-stack)  
-5. [System Modules](#system-modules)  
-6. [Installation & Setup](#installation--setup)  
-7. [Environment Configuration](#environment-configuration)  
-8. [Usage Guide](#usage-guide)  
-9. [Deployment](#deployment)  
-10. [Contributing](#contributing)  
-11. [Team & Credits](#team--credits)  
-12. [Vision](#vision)  
-13. [License](#license)
+1. Overview  
+2. Key Features 
+3. Architecture 
+4. Tech Stack 
+5. System Modules  
+6. Installation & Setup  
+7. Environment Configuration 
+8. Usage Guide 
+9. Deployment
+10. Contributing
+11. Team & Credits
+12. Vision 
+13. License
 
 ---
 
@@ -197,4 +197,5 @@ Commit your changes
 Open a Pull Request
 
 Ensure adherence to coding standards and documentation practices.
+
 
