@@ -146,25 +146,25 @@ FastAPI server runs at http://localhost:8000
 🔧 Environment Configuration
 Create a .env file in each module root:
 
-Frontend .env.local
-ini
-Copy code
+Frontend
+.env.local
+
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
 NEXT_PUBLIC_GENAI_URL=http://localhost:8000
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<YOUR_KEY>
 NEXT_PUBLIC_GNEWS_API_KEY=<YOUR_KEY>
 
-Backend .env
-ini
-Copy code
+Backend
+.env
+
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jivika
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=<PASSWORD>
 JWT_SECRET=<YOUR_SECRET>
 
-GenAI .env
-ini
-Copy code
+GenAI
+.env
+
 LANGGRAPH_API_KEY=<KEY>
 LANGSMITH_API_KEY=<KEY>
 POSTGRES_URL=postgresql://user:pass@localhost:5432/jivika
@@ -197,5 +197,6 @@ Commit your changes
 Open a Pull Request
 
 Ensure adherence to coding standards and documentation practices.
+
 
 
